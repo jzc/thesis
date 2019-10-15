@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+
+\newcommand{\A}{\mathcal{A}}  % alphabet
+% \newcommand{\L}{\mathcal{L}}  % label function
+\newcommand{\G}{\mathcal{G}}  % labeled graph
+\newcommand{\shift}[1]{\mathsf{X}_{#1}}
+
+\newtheorem{theorem}{Theorem}
+
+\begin{document}
+    \begin{theorem}
+        If \(\mathcal{G} = (G, \mathcal{L})\) is the minimizing right resolving
+        presentation of an irreducible sofic shift \(X\) and \(X\) is and
+        \(N\)-step shift of finite type, then \(\shift{G} \cong \shift{\G}\).
+    \end{theorem}
+    \begin{proof}
+        Let \(x, y\) be walks in \(\shift{G}\). If \(\mathcal{L}_\infty(x)=\mathcal{L}_\infty(y)\),
+        then for any \(i\), the paths \(x_{[i-n, i-1]}\) and \(y_{[i-n, i-1]}\) present 
+        the same word. Because that word is of length \(N\), the word is synchronizing
+        for \(\mathcal{G}\) (from 3.4.17), so those paths end at the same vertex. Since
+        \(\mathcal{L}(x_{[i]}) = \mathcal{L}(y_{[i]})\), \(\mathcal{G}\) is right 
+        resolving, and \(x_{[i-n, i-1]}\) and \(y_{[i-n, i-1]}\) end at the same vertex,
+        then \(x_{[i]} = y_{[i]}\) and hence \(x = y\), so \(\mathcal{L}_\infty\) is injective.
+        By definition, \(\mathcal{L}_\infty\) is surjective. Therefore, \(\mathcal{L}_\infty\) is bijective and 
+        a conjugacy from \(\mathsf{X}_G\) to \(\mathsf{X}_\mathcal{G}\).
+    \end{proof}
+\end{document}
