@@ -2,18 +2,23 @@
 \usepackage{geometry}
 \usepackage{amsmath, amssymb, amsthm}
 
-\newcommand{\A}{\mathcal{A}}  % alphabet
-% \newcommand{\L}{\mathcal{L}}  % label function
-\newcommand{\G}{\mathcal{G}}  % labeled graph
+\newcommand{\Ac}{\mathcal{A}}  % alphabet
+\newcommand{\Lc}{\mathcal{L}}  % label function
+\newcommand{\Gc}{\mathcal{G}}  % labeled graph
+\newcommand{\Hc}{\mathcal{H}}  % labeled graph
+\newcommand{\Vc}{\mathcal{V}}
+\newcommand{\Ec}{\mathcal{E}}
 \newcommand{\shift}[1]{\mathsf{X}_{#1}}
+\newcommand{\term}[1]{\textit{#1}}
 
 \newtheorem{theorem}{Theorem}
+\newtheorem{definition}[theorem]{Definition}
 
 \begin{document}
     \begin{theorem}
         If \(\mathcal{G} = (G, \mathcal{L})\) is the minimizing right resolving
         presentation of an irreducible sofic shift \(X\) and \(X\) is and
-        \(N\)-step shift of finite type, then \(\shift{G} \cong \shift{\G}\).
+        \(N\)-step shift of finite type, then \(\shift{G} \cong \shift{\Gc}\).
     \end{theorem}
     \begin{proof}
         Let \(x, y\) be walks in \(\shift{G}\). If \(\mathcal{L}_\infty(x)=\mathcal{L}_\infty(y)\),
@@ -26,4 +31,69 @@
         By definition, \(\mathcal{L}_\infty\) is surjective. Therefore, \(\mathcal{L}_\infty\) is bijective and 
         a conjugacy from \(\mathsf{X}_G\) to \(\mathsf{X}_\mathcal{G}\).
     \end{proof}
+
+    \begin{definition}
+        A \term{graph} \(G\) is a finite set of \term{verticies} \(\Vc=\Vc(G)\) and a finite set 
+        of edges \(\Ec = \Ec(G)\) with each \(e \in \Ec\) starting at a vertex \(i(e) \in \Vc\)
+        and terminating at a vertex \(t(e) \in \Vc\). Note that two edges can start at terminate
+        at the same vertex.
+    \end{definition}
+
+    \begin{definition}
+        Let \(G\) and \(H\) be graphs. A \term{graph isomorphism from \(G\) to \(H\)}
+        is a bijective pair of maps \(\partial \Phi : \Vc(G) \to \Vc(H)\) and \(\Phi : \Ec(G) \to \Ec(H)\)
+        such that \(i(\Phi(e)) = \partial \Phi(i(e))\) and \(t(\Phi(e)) = \partial \Phi(t(e))\)
+        for all \(e \in \Ec(G)\). If there exists a graph isomorphism between \(G\) and \(H\),
+        then \(G\) and \(H\) are graph isomorphic and is denoted \(G \cong H\).
+    \end{definition}
+
+    \begin{definition}
+        Let \(\Gc = (G, \Lc_G)\) and \(\Hc = (H, \Lc_H)\) be labeled graphs.
+        A label-graph isomorphism is a graph isomorphism \((\partial \Phi, \Phi) : G \to H\)
+        such that \(\Lc_H(\Phi(e)) = \Lc_G(e)\) for all \(e \in \Ec(G)\), which is 
+        denoted \((\partial \Phi, \Phi) : \Gc \to \Hc\). If there exists a label-graph 
+        isomorphism between \(\Gc\) and \(\Hc\), then \(\Gc\) and \(\Hc\) are label-graph
+        isomorphic (or just isomorphic) and is denoted \(\Gc \cong \Hc\).
+    \end{definition}
+
+    \begin{theorem} 
+        If \((\partial\Phi, \Phi) : G \to H\) is a graph isomorphism from \(G\) to \(H\),
+        then \((\partial\Phi^{-1}, \Phi^{-1}): H \to G\) is a graph isomorphism from \(H\) to \(G\).
+    \end{theorem}
+
+    \begin{proof}
+        For an edge \(e_G \in \Ec(G)\), we have 
+        \begin{align*}
+            \partial\Phi(i(e)) &= i(\Phi(e))  \\
+            \partial\Phi^{-1}(\partial\Phi(i(e))) &= \partial\Phi^{-1}(i(\Phi(e)))\\
+            i(e) &= \partial\Phi^{-1}(i(\Phi(e)))
+        \end{align*}
+        Hence, for an edge \(e_H \in \Ec(H)\), \(\Phi^{-1}(e_H) \in \Ec(G)\) so 
+        \begin{align*}
+            i(\Phi^{-1}(e_H)) &= \partial\Phi^{-1}(i(\Phi(\Phi^{-1}(e_H))))\\
+            &= \partial\Phi^{-1}(i(e_H))
+        \end{align*}
+        A similar argument shows that \(t(\Phi^{-1}(e_H)) = \partial\Phi^{-1}(t(e))\).
+        
+    \end{proof}
+
+
+    \begin{theorem}
+        Let \(\Gc = (G, \Lc_G)\) and \(\Hc = (H, \Lc_H)\) be labeled graphs. 
+        If \(\Gc \cong \Hc\), then \(\shift{\Gc} = \shift{\Hc}\).
+    \end{theorem}
+
+    \begin{proof}
+        For \(x \in \shift{\Gc}\), there exists a \(y \in \shift{G}\) such that \(x_i = \Lc_G(y_i) = \Lc_H(\Phi(y_i))\).
+        Note that for all \(i \in \mathbb{Z}\),
+        \begin{align*}
+            t(y_i) &= i(y_{i+1})\\
+            \partial \Phi(t(y_i)) &= \partial\Phi(i(y_{i+1}))\\
+            t(\Phi(y_i)) &= i(\Phi(y_{i+1}))
+        \end{align*}
+        so \(\Phi_\infty(y) \in \shift{H}\) and therefore \(x=\left( \Lc_H \circ \Phi \right)_\infty(y) \in \shift{\Hc}\).
+        
+    \end{proof}
+
+    
 \end{document}
