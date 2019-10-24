@@ -32,7 +32,7 @@ minimizing reducible sofic shifts
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{definition}{Definition}
-\newtheorem*{question}{Question}
+\newtheorem*{conjecture}{Conjecture}
 % \newtheorem{example}{Example}
 
 \begin{document}
@@ -193,10 +193,26 @@ right-infinite sequence from the even shift. Since an infinite number of \(0\)'s
 a \(1\) is a left-infinite sequence for the even shift, a walk visiting \(A\) is in the 
 even shift. Any walk only visiting \(B\) and \(C\) is also a walk in the even shift. 
 
-\begin{question}
-    What are necessary and sufficient conditions for minimal, reducible, right-resolving graphs 
-    
-\end{question}
+Therefore, an algorithm for minimizing reducible graphs is still to be desired. However, 
+a polynomial time algorithm might be unlikely, as this problem might be as hard as 
+the graph isomorphism problem. The \(\mathsf{GI}\) complexity class is the set of decision 
+problems that have a polynomial-time Turing reduction to the graph isomorphism problem (a 
+\term{graph isomorphism} is an invertible maping from the verticies of one graph 
+to the verticies of another such that two vertices are connected if and only if they 
+are connected under the isomorphism; the graph isomorphism problem asks given two 
+graphs, decide whether there exists an isomorphism between the graphs) \cite{kobler2012graph}.
+Currently, \(\mathsf{GI}\) is not known to be in \(\mathsf{P}\) nor complete for \(\mathsf{NP}\).
+
+Define the \term{minimal reducible presentation} problem as given a reducible labeled-graph,
+decided if it is a presentation with the fewest verticies among all presentations of its shift. 
+A problem is \term{\(\mathsf{GI}\)-hard} if there exists a polynomial-time Turing reduction from 
+any problem in \(\mathsf{GI}\) to that problem. This research presents
+
+\begin{conjecture}
+    The minimal reducible presentation problem is \(\mathsf{GI}\)-hard.
+\end{conjecture}
+
+
 
 \printbibliography
 
