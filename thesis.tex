@@ -1,7 +1,7 @@
 \documentclass{article}
-\usepackage{geometry}
 \usepackage{amsmath, amssymb, amsthm}
 \usepackage{tikz}
+\usetikzlibrary{positioning}
 
 \newcommand{\Ac}{\mathcal{A}}  % alphabet
 \newcommand{\Lc}{\mathcal{L}}  % label function
@@ -11,18 +11,134 @@
 \newcommand{\Ec}{\mathcal{E}}
 \newcommand{\Bc}{\mathcal{B}}
 \newcommand{\Kc}{\mathcal{K}}
+\newcommand{\Fc}{\mathcal{F}}
 \newcommand{\shift}[1]{\mathsf{X}_{#1}}
 \newcommand{\term}[1]{\textit{#1}}
+\newcommand{\Sync}{\textsf{Sync}}
 
 \theoremstyle{definition}
 \newtheorem{theorem}{Theorem}
 \newtheorem{definition}{Definition}
 \newtheorem{lemma}{Lemma}
 
-\renewcommand{\baselinestretch}{1.1}
+\renewcommand{\baselinestretch}{1.15}
 \setlength{\parskip}{.05em}
 
 \begin{document}
+
+\section{Preliminaries}
+
+\begin{definition}
+    Let \(\Ac\) be a finite set. The \term{full \(\Ac\)-shift} is the set \(\Ac^\mathbb{Z}\) of all 
+    bi-infinite sequences over \(\Ac\) (i.e. functions from \(\mathbb{Z}\) to \(\Ac\), hence the 
+    usual notation for the set of all functions from \(\mathbb{Z}\) to \(\Ac\)).
+\end{definition}
+
+\noindent A \term{block} (or \term{word}) is a finite sequence of letters over some alphabet \(\Ac\). 
+Let \(x=(x_i)_{i \in \mathbb{Z}}\) be a bi-infinite sequence. For \(i \leq j\), the block from the 
+\(i\)th coordinate to the \(j\)th coordinate is denoted \[x_{[i,j]} \triangleq x_i x_{i+1} \dots x_{j}.\]
+
+\begin{definition}
+    Let \(\Fc\) be a set of words over some alphabet. A \term{subshift} is a subset \(\shift{\Fc}\)
+    of some full shift \(\Ac^\mathbb{Z}\) such that no word in \(\Fc\) appears in any point of the subshift,
+    defined as
+    \[\shift{\Fc} \triangleq \Big\{ \; (x_i)_{i \in \mathbb{Z}} \in \Ac^\mathbb{Z} \; : \; \forall i, j \in \mathbb{Z}, i\leq j \quad  x_{[i,j]} \notin \Fc \; \Big\}.\]
+\end{definition}
+
+\begin{definition}
+    A \term{graph} \(G\) is a \(4\)-tuple \(G = (\Vc, \Ec, i, t)\), where \(\Vc\) is a finite 
+    set of \term{vertices}, \(\Ec\) is a finite set of \term{edges}, and \(i : \Ec \to \Vc\) and 
+    \(t : \Ec \to \Vc\) are functions assigning an \term{initial} and \term{terminating} vertex for 
+    each edge, respectivley. For an arbitrary graph \(G\), let 
+    \(\Vc_G\), \(\Ec_G\), \(i_G\), and \(t_G\) denote the graph's vertices, edges, and 
+    intial and terminating vertex functions, respectivley. If the choice 
+    of \(G\) is understood, then the subscripts will be dropped for notational convenience.
+
+    For \(I \in \Vc\), the \term{outgoing edges of \(I\)} is the set of edges starting at \(I\),
+    denoted 
+    \[i^{-1}(I) = \{e \in \Ec : i(e) = I\}.\]
+    Similary, the \term{incoming edges of \(I\)} is the set of edges terminating at \(I\), 
+    denoted
+    \[t^{-1}(I) = \{e \in \Ec : t(e) = I\}.\]
+
+    A graph is \term{essential} if all verticies have at least one incoming and outgoing edge;
+    i.e. for all \(I \in \Vc\), \(i^{-1}(I) \ne \varnothing\) and \(t^{-1}(I) \ne \varnothing\).
+
+\end{definition}
+
+\begin{definition}
+    A \term{labeled graph} \(\Gc\) is a pair \(\Gc = (G, \Lc)\), where \(G\) is a graph and \(\Lc : \Ec \to \Ac\) is the 
+    \term{labeling function} from the edges of \(G\) onto some finite alphabet \(\Ac\).
+
+    A labeled graph is \term{deterministic} if for each vertex, the labels of the outgoing edges at that vertex are all distinct 
+    (i.e. \(\Lc|_{i^{-1}(I)}\) is injective for all \(I \in \Vc\)).
+\end{definition}
+
+\begin{definition}
+    Let \(G\) be a graph. The \term{edge shift of \(G\)} is the set \(\shift{\Gc}\) of all bi-infinite 
+    paths on \(G\), defined as 
+    \[\shift{G} \triangleq \Big\{ \; (x_i)_{i \in \mathbb{Z}} \in \Ec^\mathbb{Z} \; : \; \forall i \in \mathbb{Z} \quad t(x_i) = i(x_{i+1}) \; \Big\}. \]
+\end{definition}
+
+\noindent As a consequence of this definintion, \(\Bc(\shift{G})\) is the 
+set of all finite paths on \(G\), so elements of \(\Bc(\shift{G})\) are called
+\term{paths on \(G\)}.
+
+
+\begin{definition}
+    Let \(\Gc = (G, \Lc)\) be a labeled graph. The \term{presentation of \(\Gc\)} is the set \(\shift{\Gc}\)
+    of the labels of all bi-infinite paths from \(\shift{G}\), defined as the image of 
+    \(\Lc_\infty\) under \(\shift{G}\): \[\shift{\Gc} \triangleq \Lc_\infty(\shift{G}).\]
+    We say a word \(w \in \Bc(\shift{\Gc})\) is \term{presented by a path} \(\pi \in \Bc(\shift{G})\) if \(\Lc(\pi) = w\).
+\end{definition}
+
+\begin{definition}
+    Let \(\Gc = (G, \Lc)\) be a labeled graph. 
+\end{definition}
+
+    
+
+
+\section{Irreducibility}
+
+\noindent Consider the graph \(\Gc\):
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+        [vertex/.style={circle, radius=10mm, fill=black, inner sep=1.25pt}]
+        \node[vertex] (A) at (0,0) {};
+        \node[vertex] (B) at (2,0) {};
+        \node[vertex] (C) at (0,2) {};
+
+        \path [->] (A) edge[out=225, in=135, distance=10mm] node[left] {$1$} (A);
+        \path [->] (A) edge[out=45, in=135] node[above] {$0$} (B);
+        \path [->] (B) edge[out=225, in=-45] node[below] {$0$} (A);
+        \path [->] (C) edge[out=270, in=90, distance=2mm] node[left] {$0$} (A);
+    \end{tikzpicture} 
+\end{figure}
+
+
+
+
+\begin{theorem}
+    If \(v \in \Vc_\Hc\), then \(v\) is synchronizing for \(\Gc\Hc\).
+\end{theorem}
+
+\begin{proof}
+    For any word \(w \in \Bc(\shift{\Hc})\), Let
+\end{proof}
+
+\begin{theorem}
+    If \(\shift{\Gc\Hc}\) is irreducible, then \(\shift{\Gc} \subseteq \shift{\Hc}\).
+\end{theorem}
+
+\begin{proof}
+    Let \(\Lc(\pi) \in \Bc(\shift{\Gc})\). As \(\Gc\) is strongly connected,
+    there is a path \(\tau \in \Bc(\shift{G})\) with \(t(\tau) = J\) and \(\pi\tau \in \Bc(\shift{G})\).
+    Hence, the word \(\Lc(\pi\tau e) = w\) 
+\end{proof}
+
     \begin{theorem}
         If \(\mathcal{G} = (G, \mathcal{L})\) is the minimizing right resolving
         presentation of an irreducible sofic shift \(X\) and \(X\) is and
@@ -41,14 +157,7 @@
         a conjugacy from \(\mathsf{X}_G\) to \(\mathsf{X}_\mathcal{G}\).
     \end{proof}
 
-    % \begin{definition}
-    %     A \term{graph} \(G\) is a \(4\)-tuple \((\Vc, \Ec, i, t)\), where \(\Vc\) is a finite 
-    %     set of \term{vertices}, \(\Ec\) is a finite set of \term{edges}, and \(i : \Ec \to \Vc\) and 
-    %     \(t : \Ec \to \Vc\) are functions assigning an \term{initial} and \term{terminating} vertex for 
-    %     each edge, respectivley. For an arbitrary graph \(G\), let 
-    %     \(\Vc_G\), \(\Ec_G\), \(i_G\), and \(t_G\) denote the graph's vertices, edges, and 
-    %     intial and terminating vertex functions, respectivley.
-    % \end{definition}
+
 
     % \begin{definition}
     %     Let \(G\) and \(H\) be graphs. A \term{graph homomorphism from \(G\) to \(H\)} is 
@@ -144,7 +253,7 @@
     as any path starting in \(\Hc\) cannot end in \(\Gc\).
     
 
-    \begin{figure}[h]
+    \begin{figure}[ht]
         \centering
         \begin{tikzpicture}
             \node[shape=circle, draw=black] (G) at (0,0) {\(\Gc\)};
