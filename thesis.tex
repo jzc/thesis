@@ -1,7 +1,7 @@
 \documentclass{article}
 \usepackage{amsmath, amssymb, amsthm}
 \usepackage{tikz}
-\usetikzlibrary{positioning}
+\usetikzlibrary{positioning, arrows.meta}
 
 \newcommand{\Ac}{\mathcal{A}}  % alphabet
 \newcommand{\Lc}{\mathcal{L}}  % label function
@@ -101,42 +101,85 @@ set of all finite paths on \(G\), so elements of \(\Bc(\shift{G})\) are called
 
 \section{Irreducibility}
 
-\noindent Consider the graph \(\Gc\):
+\noindent Consider the reducible graph \(\Gc\):
 
 \begin{figure}[h]
     \centering
     \begin{tikzpicture}
-        [vertex/.style={circle, radius=10mm, fill=black, inner sep=1.25pt}]
-        \node[vertex] (A) at (0,0) {};
-        \node[vertex] (B) at (2,0) {};
-        \node[vertex] (C) at (0,2) {};
+        [vertex/.style={circle, radius=10mm, inner sep=1pt},
+         shorten <=1pt, shorten >= 1pt, >={Stealth[]}]
+        \node[vertex] (A) at (0,0) {I};
+        \node[vertex] (B) at (2,0) {J};
+        \node[vertex] (C) at (-2, 0) {K};
 
         \path [->] (A) edge[out=225, in=135, distance=10mm] node[left] {$1$} (A);
         \path [->] (A) edge[out=45, in=135] node[above] {$0$} (B);
         \path [->] (B) edge[out=225, in=-45] node[below] {$0$} (A);
-        \path [->] (C) edge[out=270, in=90, distance=2mm] node[left] {$0$} (A);
+        \path [->] (C) edge[out=90, in=90] node[above] {$1$} (A);
+        \path [->] (C) edge[out=135, in=225, distance=10mm] node[left] {$0$} (C);
     \end{tikzpicture} 
 \end{figure}
 
+\noindent The shift that subgraph induced by \(I\) and \(J\) is the even shift, and every 
+word presented by a path starting from \(K\) is presented by some path starting at 
+\(I\) and \(J\). Hence, this graph presents the even shift. Additionly, it is 
+also follower-separated as \(01 \in F(K)\backslash F(I)\), \(1 \in F(K)\backslash F(J)\),
+and \(1 \in F(I) \backslash F(J)\). 
 
+When do follower-separated reducible graphs present irreducible shifts? We will first look 
+at a simple class of reducible graphs. Let \(\Gc=(G, \Lc_\Gc)\) and \(\Hc = (H, \Lc_\Hc)\) be irreducible, follower-separated
+graphs.
+Fix two verticies, \(I \in \Vc_\Gc\) and \(J \in \Hc\), and some label \(\ell\) 
+not in the outgoing labels of \(I\) (i.e. \(\ell \notin \Lc_\Gc(i^{-1}(I))\)). Define the graph 
+\(\Gc^\to\Hc = (G^\to H, \Lc_{\Gc^\to\Hc})\) be the disjoint union of \(\Gc\) and \(\Hc\) plus one
+distinct edge \(e\) with \(i(e) = I\), \(t(e) = J\), and \(\Lc(e) = \ell\).
+
+Some immediate properties of \(\Gc^\to\Hc\) are \(\shift{\Gc} \subseteq \shift{\Gc^\to\Hc}\),
+\(\shift{\Hc} \subseteq \shift{\Gc^\to\Hc}\), and that there exists a path from any 
+vertex in \(\Gc^\to\Hc\) to any vertex in \(\Hc\).
 
 
 \begin{theorem}
-    If \(v \in \Vc_\Hc\), then \(v\) is synchronizing for \(\Gc\Hc\).
+    For \(I \in \Vc_\Hc\), \(I\) is synchronizing for \(\Gc^\to\Hc\).
 \end{theorem}
 
 \begin{proof}
-    For any word \(w \in \Bc(\shift{\Hc})\), Let
+    Let \(u \in \Bc(\shift{\Gc^\to\Hc})\). By [Lind and Marcus 3.3.16], we can 
+    extend \(u\) on the right to a synchronizing word \(uw \in \Bc(\shift{\Gc^\to\Hc})\).
+    If \(I \in \Vc_\Hc\), then as there exists a path from any 
+    vertex in \(\Gc^\to\Hc\) to any vertex in \(\Hc\), we can extend \(uw\) 
+    to \(uwv \in \Bc(\shift{\Gc^\to\Hc})\) and any path presenting \(uwv\) must end at 
+    \(I\). Therefore, \(I\) is synchronizing. 
 \end{proof}
 
 \begin{theorem}
-    If \(\shift{\Gc\Hc}\) is irreducible, then \(\shift{\Gc} \subseteq \shift{\Hc}\).
+    If \(\shift{\Gc^\to\Hc}\) is irreducible, then \(\shift{\Gc} \subseteq \shift{\Hc}\).
 \end{theorem}
 
 \begin{proof}
-    Let \(\Lc(\pi) \in \Bc(\shift{\Gc})\). As \(\Gc\) is strongly connected,
-    there is a path \(\tau \in \Bc(\shift{G})\) with \(t(\tau) = J\) and \(\pi\tau \in \Bc(\shift{G})\).
-    Hence, the word \(\Lc(\pi\tau e) = w\) 
+    Suppose \(\shift{\Gc^\to\Hc}\) is irreducible, and let \(u \in \Bc(\shift{\Gc})\). By Theorem 1, we can extend 
+    \(u\) on the right to \(u s_J \in \Bc(\shift{\Gc^\to\Hc})\), so that any 
+    path presenting \(u s_J\) ends at \(J\). As \(\shift{\Gc^\to\Hc}\) is irreducible,
+    there exists a word \(w \in \Bc(\shift{\Gc^\to\Hc})\) such that \(u s_J w u \in \Bc(\shift{\Gc^\to\Hc})\).
+    The \(wu\) subword must be presented by some path in \(\Hc\) as \(u s_J\) 
+    synchronizes to \(J \in \Vc_\Hc\). Hence \(w \in \Bc(\shift{\Hc})\), so \(\shift{\Gc} \subseteq \shift{\Hc}\).
+\end{proof}
+
+\begin{theorem}
+    If \(\shift{\Gc^\to\Hc}\) is irreducible, then \(\ell \in \Lc(t^{-1}_H(J))\).
+\end{theorem}
+
+\begin{proof}
+    Suppose \(\ell \notin \Lc(t^{-1}_H(J))\). Consider just \(\Hc\), 
+    then if \(\ell \in \Bc(\shift{\Hc})\), then a path presenting \(\ell\) does not 
+    end at \(J\). As \(\Hc\) is follower-separated, there is a word 
+    \(w \in F(J)\) and \(w \notin F(K)\) for all \(K \in \Vc_\Hc \backslash \{J\}\).
+    Hence, we have \(\ell w \notin \Bc(\shift{\Hc})\).
+
+    By Theorem 1, let \(s_\Hc\) be a word that synchronizes to some vertex in \(\Hc\).
+    Then, \(F(s_\Hc) \subseteq \Bc(\shift{\Hc})\), hence for every word
+    \(u \in \Bc(\shift{\Gc^\to\Hc})\), \(s_\Hc u \ell w \notin \Bc(\shift{\Gc^\to\Hc})\).
+    Therefore, \(\shift{\Gc^\to\Hc}\) is reducible.
 \end{proof}
 
     \begin{theorem}
