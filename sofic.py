@@ -3,6 +3,8 @@ import networkx.algorithms.isomorphism as iso
 import random
 from collections import deque
 import heapq 
+from datetime import datetime
+
 
 def is_labeled(G):
     """Returns True if each edge in G has a label attribute."""
@@ -113,7 +115,7 @@ def minimize(g):
         a = next(it)
         eq_class = set([a])
         for b in it:
-            if not marked[a, b]:
+            if not marked[o(a, b)]:
                 eq_class.add(b)
         vertices -= eq_class  
         eq_class = iset(eq_class) 
@@ -204,7 +206,7 @@ def subset_construction(G):
     q = deque([init])
     while q:
         current = q.popleft()
-        print(current)
+        # print(current)
         outgoing_labels = iset(l for _, _, l in G.out_edges(current, data="label"))
         # print(outgoing_labels)
         for l in outgoing_labels:
@@ -246,12 +248,7 @@ def astar(G, source, target_set, h):
                     heapq.heappush(q, (f[succ], succ))
 
 
-def find_synchronizing_word(G, init=None):
-    if init is None:
-        init = iset(list(G))
-    G_ssc = subset_construction(G)
-    prev, target, _ = astar(G_ssc, init, {iset([i]) for i in G}, len)
-
+def reconstruct_path(prev, target):
     p = []
     while target in prev:
         p.append(target)
@@ -262,6 +259,15 @@ def find_synchronizing_word(G, init=None):
     x = ([l for _, K, l in G_ssc.out_edges(I, data="label") if K == J] for I, J in x)
     x = (ls[0] for ls in x)
     return ''.join(x)
+
+
+def find_synchronizing_word(G, init=None):
+    if init is None:
+        init = iset(list(G))
+    G_ssc = subset_construction(G)
+    prev, target, _ = astar(G_ssc, init, {iset([i]) for i in G}, len)
+
+    return reconstruct_path(prev, target)
 
 
 def is_2_simple(G):
@@ -279,3 +285,102 @@ def is_2_simple(G):
     return False
 
     
+def write_graph(G):
+    name = datetime.now().strftime("%Y-%m-%d--%H-%M-%S.xml")
+    nx.write_graphml(G, f"graphs/{name}")
+
+
+def find_shortest_synchronizing_word(G):
+    G_ssc = subset_construction(G)
+    source = iset(list(G))
+
+    for u, v in nx.bfs_edges(G_ssc, source):
+        G_ssc.nodes[v]["pred"] = u
+
+    ws = {}
+    for singleton in (s for s in G_ssc if len(s) == 1):
+        c = singleton
+        path = []
+        no_path = False
+        while c != source:
+            path.append(c)
+            if "pred" not in G_ssc.nodes[c]:
+                no_path = True
+                break
+            else: 
+                c = G_ssc.nodes[c]["pred"]
+
+        if no_path:
+            continue
+
+        path.append(source)
+        path = list(reversed(path))
+        w = []
+        for u, v in zip(path, path[1:]):
+            w.append(next(iter(G_ssc[u][v].values()))["label"])
+        ws[singleton] = ''.join(w)
+
+    return ws
+
+
+def make_scc_dag(G):
+    Gp = nx.DiGraph()
+    sccs = [iset(c) for c in nx.strongly_connected_components(G)]
+    Gp.add_nodes_from(sccs)
+    for ci in sccs:
+        for cj in sccs:
+            if ci != cj:
+                edges_between_ci_cj = [(u, v) for u, v in G.out_edges(ci) if v in cj]
+                if edges_between_ci_cj:
+                    Gp.add_edge(ci, cj, edges_between=edges_between_ci_cj)
+
+                edges_between_cj_ci = [(u, v) for u, v in G.out_edges(cj) if v in ci]
+                if edges_between_cj_ci:
+                    Gp.add_edge(cj, ci, edges_between=edges_between_cj_ci)
+
+    return Gp
+
+
+# def covered_by_set(G, I, S):    
+#     S0 = S
+#     covered_by
+#     q = deque([(I, S0)])
+#     visited = set()
+#     while q:
+#         I, S = q.popleft()
+#         visited.add((I, S))
+
+#         print(str((I,S)))
+#         if S == iset():
+#             return False
+
+#         if I in S:
+#             return True
+
+#         for _, J, l in G.out_edges(I, data="label"):
+#             T = transition_subset(G, S, l)
+#             if (J, T) not in visited:
+#                 q.append((J, T))
+
+
+# def covered_by(G, S, T):
+    
+
+
+# def presents_irreducible_shift(G):
+#     dag = make_scc_dag(G)
+#     sinkset = (s for s in dag if not dag.out_edges(s))
+#     sinkset = iset(i for s in sinkset for i in s)
+
+#     V = set(G) - sinkset
+#     while V:
+#         print(V)
+#         I = next(iter(V))
+#         covered = covered_by_set(G, I, sinkset)
+#         if not covered:
+#             return False
+#         else:
+#             V -= covered
+
+#     return True
+            
