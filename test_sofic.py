@@ -84,3 +84,16 @@ def test_is_follower_separated():
     assert is_follower_separated(G2)
     assert not is_follower_separated(G3)
     assert is_follower_separated(G4)
+
+
+def test_graph_from_partial_fns():
+    pfns = {"0": [1, 0], "1": [0, None]}
+    assert is_label_isomorphic(G2, graph_from_partial_fns(pfns))
+
+
+def test_is_irreducible():
+    assert is_irreducible(G2)
+    assert is_irreducible(G3)
+    assert is_reducible(G4)
+    assert not is_irreducible(G4)
+    assert is_irreducible(G5)
