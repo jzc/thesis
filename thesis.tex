@@ -1,5 +1,6 @@
 \documentclass{article}
 \usepackage{amsmath, amssymb, amsthm}
+\usepackage{thmtools}
 \usepackage{tikz}
 \usepackage[shortlabels]{enumitem}
 \usepackage{todonotes}
@@ -8,7 +9,7 @@
 
 \reversemarginpar
 
-\usetikzlibrary{positioning, arrows.meta}
+\usetikzlibrary{positioning, arrows.meta, shapes}
 
 \newcommand{\Ac}{\mathcal{A}}  % alphabet
 \newcommand{\Lc}{\mathcal{L}}  % label function
@@ -19,6 +20,7 @@
 \newcommand{\Bc}{\mathcal{B}}
 \newcommand{\Kc}{\mathcal{K}}
 \newcommand{\Fc}{\mathcal{F}}
+\newcommand{\Fs}{\mathsf{F}}
 \newcommand{\GtH}{\Gc^\to\Hc}
 \newcommand{\shift}[1]{\mathsf{X}_{#1}}
 \newcommand{\term}[1]{\textit{#1}}
@@ -27,18 +29,38 @@
 \usepackage[bitstream-charter, cal=cmcal]{mathdesign}
 
 \theoremstyle{definition}
-\newtheorem{theorem}{Theorem}
-\newtheorem{definition}{Definition}
-\newtheorem{lemma}{Lemma}
+% \newtheorem{theorem}{Theorem}
+\declaretheorem[numberwithin=section]{theorem}
+\declaretheorem[sibling=theorem]{lemma}
+\declaretheorem[sibling=theorem]{definition}
+\declaretheorem[sibling=theorem]{corollary}
+% \newtheorem{definition}{Definition}
+% \newtheorem{lemma}{Lemma}
 
 \renewcommand{\baselinestretch}{1.2}
 \setlength{\parskip}{.05em}
 
-\title{}
+\title{Computational complexity for presentations of sofic shifts}
+\author{Justin Cai}
 
 \begin{document}
 
-\todo[inline]{Figure out correct theorem referencing.}
+\maketitle
+
+\begin{abstract}
+    Given an irreducible presentation of a sofic shift, it is well known that the 
+    shift it presents is irreducible and that there is a 
+    procedure that yields the unique vertex-minimal presentation for
+    this shift in polynomial time. However, if one was given a reducible 
+    graph, there is not necessarily a unique vertex-minimal presentation, and 
+    a procedure for the construction of some minimal presentation in 
+    this case is unknown. It can be the case where the presentation still presents 
+    an irreducible shift, but the previous procedure will not produce the 
+    minimal presentation. In this thesis, we show complexity results around 
+    these problems.
+\end{abstract}
+
+% \todo[inline]{Figure out correct theorem referencing.}
 
 \section{Preliminaries}
 
@@ -75,7 +97,7 @@ Let \(x=(x_i)_{i \in \mathbb{Z}}\) be a bi-infinite sequence. For \(i \leq j\), 
     denoted
     \[t^{-1}(I) \triangleq \{e \in \Ec : t(e) = I\}.\]
 
-    A graph is \term{essential} if all verticies have at least one incoming and outgoing edge;
+    A graph is \term{essential} if all vertices have at least one incoming and outgoing edge;
     i.e. for all \(I \in \Vc\), \(i^{-1}(I) \ne \varnothing\) and \(t^{-1}(I) \ne \varnothing\).
 
 \end{definition}
@@ -107,13 +129,40 @@ set of all finite paths on \(G\), so elements of \(\Bc(\shift{G})\) are called
 \end{definition}
 
 \begin{definition}
-    \todo{Synchronizing definition.}
-    Let \(\Gc = (G, \Lc)\) be a labeled graph. 
+    Let \(\Gc = (G, L)\) be a labeled graph. For a vertex \(I \in \Vc_\Gc\), the 
+    \term{follower set of \(I\)} is the set 
+    \[F(I) \triangleq \big\{ \Lc(\pi) : \pi \in \Bc(\shift{G}), i(\pi) = I \big\}.\]
+    For a word \(w \in \Bc(\shift{\Gc})\), the \term{follower set of \(w\)}
+    is the set 
+    \[F(w) \triangleq \big\{ u \in \Bc(\shift{\Gc}) : wu \in \Bc(\shift{\Gc})\big\}\]
 \end{definition}
 
-\section{Basic properties of sofic shifts}
+\begin{definition}
+    \todo{Synchronizing definition.}
+    Let \(\Gc = (G, \Lc)\) be a labeled graph, \(I\) be some vertex in \(\Gc\), and \(w \in B(\shift{\Gc})\).
+    If every path \(\pi\) in \(\Gc\) that presents \(w\) ends at \(I\), then we say \term{\(w\) synchronizes to \(I\)}.
+    We say that \(w\) is \term{synchronizing for \(\Gc\)} if it synchronizes to some vertex in \(\Gc\). 
+    If there is a word that synchronizes to \(I\), then we say that the vertex \term{\(I\) is synchronizing}.
+    Finally, we denote 
+    \(S(\Gc)\) as the set of all syncrhonizing words for \(\Gc\).
+    % A word \(w \in \Bc(\shift{\Gc})\) is 
+    % synchronizing if for all paths \(\pi\) in \(\Gc\) that present \(w\) end at the 
+    % same vertex. A vertex \(I \in \Vc_\Gc\) is synchronizing if there is a word \(w\) such 
+    % that all words that present \(w\) end at \(I\). 
+\end{definition}
 
-\todo[inline]{Irreducible presentations, synchronizing presentations}
+% \section{Basic properties of sofic shifts}
+
+% \todo[inline]{Irreducible presentations, synchronizing presentations}
+
+% \begin{theorem}
+%     Let \(\Gc = (G, \Lc)\) be a labeled graph and \(\pi\) be a path in \(\Gc\). If \(\Lc(\pi)\)
+%     is synchronizing, then \(F(\Lc(\pi)) = F(t(\pi))\).
+% \end{theorem}
+
+% \begin{theorem}
+%     If \(F(\Lc(\pi)) = F(t(\pi))\), then \(\Lc(\pi)\) is synchronizing.
+% \end{theorem}
 
 \section{Irreducibility}
 
@@ -143,45 +192,80 @@ also follower-separated as \(01 \in F(K)\backslash F(I)\), \(1 \in F(K)\backslas
 and \(1 \in F(I) \backslash F(J)\). 
 
 When do follower-separated reducible graphs present irreducible shifts? We will first look 
-at a simple class of reducible graphs. Let \(\Gc=(G, \Lc_\Gc)\) and \(\Hc = (H, \Lc_\Hc)\) be irreducible, follower-separated
-graphs.
-Fix two verticies, \(I \in \Vc_\Gc\) and \(J \in \Hc\), and some label \(\ell\) 
-not in the outgoing labels of \(I\) (i.e. \(\ell \notin \Lc_\Gc(i^{-1}(I))\)). Define the graph 
-\(\GtH = (G^\to H, \Lc_{\GtH})\) be the disjoint union of \(\Gc\) and \(\Hc\) plus one
-distinct edge \(e\) with \(i(e) = I\), \(t(e) = J\), and \(\Lc(e) = \ell\).
+at a simple class of reducible graphs.
 
-Some immediate properties of \(\GtH\) are that the graph is deterministic \(\shift{\Gc} \subseteq \shift{\GtH}\),
-\(\shift{\Hc} \subseteq \shift{\GtH}\), and that there exists a path from any 
-vertex in \(\GtH\) to any vertex in \(\Hc\).
+Let \(\GtH\) be an essential, deterministic, follower-separated graph with two irreducible components
+that induce two subgraphs, namely \(\Gc\) and \(\Hc\), such that there is 
+exactly one edge starting in \(\Gc\) and ending in \(\Hc\). 
+Some properties of \(\GtH\) are that the vertices of \(\Gc\) and \(\Hc\)
+partition the vertices of \(\GtH\), both \(\Gc\) and \(\Hc\) are essential,  
+any vertex in \(\Hc\) is reachable from any vertex in \(\GtH\), and no vertex in \(\Gc\) 
+is reachable from any vertex in \(\Hc\).
 
-\begin{theorem}
+% Let \(\Gc=(G, \Lc_\Gc)\) and \(\Hc = (H, \Lc_\Hc)\) be irreducible, follower-separated
+% graphs.
+% Fix two vertices, \(I \in \Vc_\Gc\) and \(J \in \Hc\), and some label \(\ell\) 
+% not in the outgoing labels of \(I\) (i.e. \(\ell \notin \Lc_\Gc(i^{-1}(I))\)). Define the graph 
+% \(\GtH = (G^\to H, \Lc_{\GtH})\) be the disjoint union of \(\Gc\) and \(\Hc\) plus one
+% distinct edge \(e\) with \(i(e) = I\), \(t(e) = J\), and \(\Lc(e) = \ell\).
+
+% Some immediate properties of \(\GtH\) are that the graph is deterministic \(\shift{\Gc} \subseteq \shift{\GtH}\),
+% \(\shift{\Hc} \subseteq \shift{\GtH}\), and that there exists a path from any 
+% vertex in \(\GtH\) to any vertex in \(\Hc\).
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[graph/.style={shape=ellipse, draw, minimum width=3em, text depth=1.5em},
+                        dot/.style={shape=circle, fill, inner sep=1pt}]
+        \node[graph] (G) at (0,0) {\(\Gc\)};
+        \node[graph, right=of G] (H) at (0,0) {\(\Hc\)};
+        \node[dot,below=-1.5em of G] (I) {};
+        \node[dot,below=-1.5em of H] (J) {};
+        \path [->] (I) edge[bend right, shorten <=1pt, shorten >= 1pt, >={Stealth[]}] node[above] {} (J);
+    \end{tikzpicture}
+    \caption{Representation of \(\GtH\).}
+\end{figure}
+
+\begin{theorem}\label{extensionthm}
     \todo{Related to a comment below, but this is just a corollary of [Lind and Marcus 3.3.16]
     and the nature of \(\GtH\)}
     Every word \(u \in \Bc(\shift{\GtH})\) can be extended on the right to a 
-    word \(u s_K \in \Bc(\shift{\GtH})\) that syncrhonizes to a vertex \(K \in \Vc_\Hc\).
+    word \(u w \in \Bc(\shift{\GtH})\) that syncrhonizes to a vertex \(I\) in \(\Hc\).
 \end{theorem}
 
 \begin{proof}
     Let \(u \in \Bc(\shift{\GtH})\). As \(\GtH\) is deterministic and 
     follower-separated, then by [Lind and Marcus 3.3.16], we can 
-    extend \(u\) on the right to a synchronizing word \(uw \in \Bc(\shift{\GtH})\).
-    As \(K \in \Vc_\Hc\), \(K\) can be reached from any vertex in \(\GtH\), so 
-    let \(v\) be the label of some path connecting the vertex \(uw\) synchronizes to 
-    and some vertex in \(I \in \Vc_\Hc\). Then, \(uwv\) must end at \(I\) since 
-    \(\GtH\) is deterministic and in addition, \(uwv \in \Bc(\shift{\GtH})\).
+    extend \(u\) on the right to \(uw \in \Bc(\shift{\GtH})\) so that \(uw\)
+    synchronizes to some vertex \(J\). As \(I\) is a vertex in \(\Hc\), 
+    \(I\) can be reached from \(J\), so let \(v\) be  the label of a path 
+    from \(I\) to \(J\). Then, \(uwv \in \Bc(\shift{\GtH})\) and any path presenting 
+    \(uwv\) must end at \(J\), so \(uwv\) synchornizes to \(I\).
 \end{proof}
 
-\begin{lemma}
+\begin{corollary}\label{hsync}
+    Every vertex in \(\Hc\) is synchronizing for \(\GtH\). 
+\end{corollary}
+
+\begin{proof}
+    For a vertex \(I\) in \(\Hc\), take any word \(u \in \Bc(\shift{\GtH})\) and
+    use \ref{extensionthm} to synchronize it to \(I\). Hence, there is a word that synchronizes 
+    to \(I\), so \(I\) is synchronizing.
+\end{proof}
+
+\begin{lemma}\label{wordlemma}
     Let \(u \in \Bc(\shift{\GtH})\). If \(u \notin \Bc(\shift{\Hc})\), then \(\shift{\GtH}\) is 
     reducible.
 \end{lemma}
 
 \begin{proof}
-    By Theorem 1, we can extend \(u\) on the right to a word \(us_J \in \Bc(\shift{\GtH})\)
-    so that any path presenting \(us_J\) ends at \(J\). Hence, for any word \(w \in F(us_J)\), a 
-    path presenting \(us_Jw\) ends at some vertex in \(\Vc_\Hc\), so \(F(us_Jw) \subseteq \Bc(\shift{\Hc})\). 
-    As \(u \notin \Bc(\shift{\Hc})\), we have \(u \notin F(us_Jw)\). Therefore, there is no word in 
-    \(\Bc(\shift{\GtH})\) joining the word \(us_J\) and \(u\), so \(\shift{\GtH} \) is reducible.
+    By \ref{extensionthm}, we can extend \(u\) on the right to a word \(uw \in \Bc(\shift{\GtH})\)
+    so that any path presenting \(uw\) ends at some vertex \(I\) in \(\Hc\). Hence, for any word \(v \in F(uw)\), a 
+    path presenting \(uwv\) ends at some vertex in \(\Hc\), so \(F(uwv) \subseteq \Bc(\shift{\Hc})\)
+    \todo{Probably will expand this later. Argue that \(uwv\) is synchronizing, so \(F(uwv) = F(J)\)
+    for some vertex \(J\) in \(\Hc\), so \(F(uwv) = F(J) \subseteq \bigcup_{K \in \Vc_\Hc} F(K) = \Bc(\shift{\Hc})\)}. 
+    As \(u \notin \Bc(\shift{\Hc})\), we have \(u \notin F(uwv)\). Thus, there is no word in 
+    \(\Bc(\shift{\GtH})\) joining the word \(uw\) and \(u\), so \(\shift{\GtH} \) is reducible.
 \end{proof}
 
 \begin{theorem}
@@ -197,114 +281,225 @@ vertex in \(\GtH\) to any vertex in \(\Hc\).
     synchronizes to \(J \in \Vc_\Hc\). Hence \(u \in \Bc(\shift{\Hc})\), so \(\shift{\Gc} \subseteq \shift{\Hc}\).
 \end{proof}
 
+% \begin{theorem}
+%     If \(\shift{\GtH}\) is irreducible, then \(\ell \in \Lc(t^{-1}_H(J))\).
+%     % and for all \(w \in B(\shift{\Gc})\),
+%     % \(w\ell \in B(\shift{\GtH})\) implies \(w\ell \in B(\shift{\Hc})\).
+% \end{theorem}
+
+% \begin{proof}
+%     Suppose \(\ell \notin \Lc(t^{-1}_H(J))\). Considering just \(\Hc\), 
+%     if \(\ell \in \Bc(\shift{\Hc})\), then a path presenting \(\ell\) does not 
+%     end at \(J\). As \(\Hc\) is follower-separated, there is a word 
+%     \(w \in F(J)\) and \(w \notin F(K)\) for all \(K \in \Vc_\Hc \backslash \{J\}\). 
+%     \todo{This assumption is incorrect.}
+%     Hence, we have \(\ell w \in \Bc(\shift{\GtH})\) but \(\ell w \notin \Bc(\shift{\Hc})\), 
+%     so by Lemma 1, \(\shift{\GtH}\) is reducible.
+%     %
+%     %
+%     % However, \(\ell w \in \Bc(\shift{\GtH})\), and by Theorem 1, we can extend \(\ell w\)
+%     % on the right to a word \(\ell w s_J \in \Bc(\shift{\GtH})\) that synchronizes to \(J\). 
+%     % Then, for any word \(u \in \Bc(\shift{\GtH})\) such that \(\ell w s_J u \in \Bc(\shift{\GtH})\),
+%     % \(F(\ell w s_J u) \subseteq \Bc(\shift{\Hc})\), so \(\ell w s_J u \ell w \notin \Bc(\shift{\GtH})\)
+%     % as \(\ell w \notin \Bc(\shift{\Hc})\). Therefore, as \(\ell w s_J, \ell w \in \Bc(\shift{\GtH})\),
+%     % for every word \(u \in \Bc(\shift{\GtH})\), \(\ell w s_J u \ell w \notin \Bc(\shift{\GtH})\), 
+%     % so \(\shift{\GtH}\) is reducible. 
+%     %
+%     % Now, let \(w \in \Bc(\shift{\Gc})\) be a word such that such that \(w\ell \in \Bc(\shift{\GtH})\)
+%     % and \(w\ell \notin \Bc(\shift{\Hc})\). By a similar argument, if we extend \(w \ell\) on the 
+%     % right to a synchronizing word \(w \ell s_J\) that synchronizes to \(J\), then for any 
+%     % word \(u \in \Bc(\shift{\GtH})\) such that \(w \ell s_J u \in \Bc(\shift{\GtH})\), we 
+%     % have \(F(w \ell s_J u) \subseteq \Bc(\shift{\Hc})\), so \(w \ell s_J u w \ell \notin \Bc(\shift{\GtH})\)
+%     % and therefore \(\shift{\GtH}\) is reducible.
+% \end{proof}
+
+% \begin{theorem}
+%     % Suppose \(\Hc\) is strongly follwer-separated. \todo{Define this somewhere: \( \forall I, J \in \Vc_\Hc \quad F(I) \nsubseteq F(J) \land F(J) \nsubseteq F(I)\)}
+%     The following are equivalent:
+
+%     \begin{enumerate}[(i)]
+%         \item \(\shift{\GtH}\) is irreducible
+%         \item for every path \(\pi\) in \(\GtH\) that ends at \(J\) there is another path
+%         \(\tau\) in \(\Hc\) that ends at \(J\) and presents the same word as \(\pi\).
+%     \end{enumerate}
+% \end{theorem}
+
+% \begin{proof}
+%     Suppose (ii) does not hold. Then, there exists a path \(\pi\) in \(\GtH\) that 
+%     ends at \(J\) such that for all other paths \(\tau\) in \(\Hc\), if \(\Lc(\tau) = \Lc(\pi)\),
+%     then \(\tau\) does not end at \(J\). 
+%     If there no path \(\tau\) in \(\Hc\) that presents \(\Lc(\pi)\), then 
+%     \(\Lc(\pi) \notin \Bc(\shift{\Hc})\), and so by Lemma 1, \(\shift{\GtH}\) is reducible.
+%     \todo{The rest of \(\lnot (ii) \implies \lnot (i)\) requires the same incorrect assumption above.}
+
+%     Suppose (ii) does hold. We need to show that for \(u, v \in \Bc(\shift{\GtH})\),
+%     there is a word \(w \in \Bc(\shift{\GtH})\) such that \(uwv \in \Bc(\shift{\GtH})\).
+%     Let \(\pi, \tau\) be paths in \(\GtH\) that present \(u\) and \(v\), respectivley. 
+%     If \(\tau\) starts in \(\Hc\), then by the construciton of \(\GtH\),
+%     there is a path \(\rho\) in \(\GtH\) that starts at \(t(\pi)\) 
+%     and ends at \(i(\tau)\). Hence, \(u\Lc(\rho)v \in \Bc(\shift{\GtH})\). Otherwise, 
+%     if \(\tau\) does not start in \(\Hc\), then it must start in \(\Gc\). Similarly,
+%     by the  construction of \(\GtH\), there is 
+%     a path \(\rho_1\) in \(\GtH\) that starts at \(t(\tau)\) and ends at \(J\). 
+%     Hence, the path \(\tau\rho_1\) ends at J. 
+%     By (ii), there is a path \(\tau'\) in \(\Hc\)
+%     that ends at \(J\) and presents \(\Lc(\tau\rho_1)\).
+%     \todo{Instead of using (ii) and instead assuming there 
+%     is a path \(\tau'\) in \(\Hc\) presenting \(\Lc(\tau)\), 
+%     the proof is still valid. The fact that this path ends 
+%     at \(J\) is superfluous.}
+%     By the construction of \(\GtH\), 
+%     there is a path \(\rho_2\) that starts at \(t(\pi)\) and ends at \(i(\tau')\). 
+%     Hence, \[\Lc(\pi\rho_2\tau') = \Lc(\pi)\Lc(\rho_2)\Lc(\tau') = u \Lc(\rho_2)\Lc(\tau\rho_1) = u \Lc(\rho_2)\Lc(\tau)\Lc(\rho_1) = u \Lc(\rho_2) v \Lc(\rho_1).\]
+%     As \(\Lc(\pi\rho_2\tau') \in \Bc(\shift{\GtH})\), then \(u \Lc(\rho_2) v \Lc(\rho_1) \in  \Bc(\shift{\GtH})\) and 
+%     thus \(u \Lc(\rho_2) v \in  \Bc(\shift{\GtH})\).
+% \end{proof}
+
 \begin{theorem}
-    If \(\shift{\GtH}\) is irreducible, then \(\ell \in \Lc(t^{-1}_H(J))\).
-    % and for all \(w \in B(\shift{\Gc})\),
-    % \(w\ell \in B(\shift{\GtH})\) implies \(w\ell \in B(\shift{\Hc})\).
+    \(\shift{\GtH}\) is irreducible iff \(\shift{\GtH} = \shift{\Hc}\).
 \end{theorem}
 
 \begin{proof}
-    Suppose \(\ell \notin \Lc(t^{-1}_H(J))\). Considering just \(\Hc\), 
-    if \(\ell \in \Bc(\shift{\Hc})\), then a path presenting \(\ell\) does not 
-    end at \(J\). As \(\Hc\) is follower-separated, there is a word 
-    \(w \in F(J)\) and \(w \notin F(K)\) for all \(K \in \Vc_\Hc \backslash \{J\}\). 
-    \todo{This assumption is incorrect.}
-    Hence, we have \(\ell w \in \Bc(\shift{\GtH})\) but \(\ell w \notin \Bc(\shift{\Hc})\), 
-    so by Lemma 1, \(\shift{\GtH}\) is reducible.
-    %
-    %
-    % However, \(\ell w \in \Bc(\shift{\GtH})\), and by Theorem 1, we can extend \(\ell w\)
-    % on the right to a word \(\ell w s_J \in \Bc(\shift{\GtH})\) that synchronizes to \(J\). 
-    % Then, for any word \(u \in \Bc(\shift{\GtH})\) such that \(\ell w s_J u \in \Bc(\shift{\GtH})\),
-    % \(F(\ell w s_J u) \subseteq \Bc(\shift{\Hc})\), so \(\ell w s_J u \ell w \notin \Bc(\shift{\GtH})\)
-    % as \(\ell w \notin \Bc(\shift{\Hc})\). Therefore, as \(\ell w s_J, \ell w \in \Bc(\shift{\GtH})\),
-    % for every word \(u \in \Bc(\shift{\GtH})\), \(\ell w s_J u \ell w \notin \Bc(\shift{\GtH})\), 
-    % so \(\shift{\GtH}\) is reducible. 
-    %
-    % Now, let \(w \in \Bc(\shift{\Gc})\) be a word such that such that \(w\ell \in \Bc(\shift{\GtH})\)
-    % and \(w\ell \notin \Bc(\shift{\Hc})\). By a similar argument, if we extend \(w \ell\) on the 
-    % right to a synchronizing word \(w \ell s_J\) that synchronizes to \(J\), then for any 
-    % word \(u \in \Bc(\shift{\GtH})\) such that \(w \ell s_J u \in \Bc(\shift{\GtH})\), we 
-    % have \(F(w \ell s_J u) \subseteq \Bc(\shift{\Hc})\), so \(w \ell s_J u w \ell \notin \Bc(\shift{\GtH})\)
-    % and therefore \(\shift{\GtH}\) is reducible.
+    Suppose \(\shift{\GtH}\) is irreducible, and let \(w \in \Bc(\shift{\GtH})\). By \ref{wordlemma}, 
+    as \(\shift{\GtH}\) is irreducible, then \(w \in \Bc(\shift{\Hc})\), so \(\Bc(\shift{\GtH}) \subseteq \Bc(\shift{\Hc})\).
+    By construction of \(\GtH\), we have \(\Bc(\shift{\Hc}) \subseteq \Bc(\shift{\GtH})\). Therefore, 
+    \(\Bc(\shift{\GtH}) = \Bc(\shift{\Hc})\) so \(\shift{\GtH} = \shift{\Hc}\).
+    Conversely, suppose \(\shift{\GtH} = \shift{\Hc}\). As \(\shift{\Hc}\) is irreducible, then so 
+    is \(\shift{\GtH}\).
 \end{proof}
 
-\begin{theorem}
-    % Suppose \(\Hc\) is strongly follwer-separated. \todo{Define this somewhere: \( \forall I, J \in \Vc_\Hc \quad F(I) \nsubseteq F(J) \land F(J) \nsubseteq F(I)\)}
-    The following are equivalent:
-
-    \begin{enumerate}[(i)]
-        \item \(\shift{\GtH}\) is irreducible
-        \item for every path \(\pi\) in \(\GtH\) that ends at \(J\) there is another path
-        \(\tau\) in \(\Hc\) that ends at \(J\) and presents the same word as \(\pi\).
-    \end{enumerate}
+\begin{theorem}\label{nogsync}
+    If \(\shift{\GtH}\) is irreducible, then no vertex in \(\Gc\) is synchronizing for \(\GtH\).
 \end{theorem}
 
 \begin{proof}
-    Suppose (ii) does not hold. Then, there exists a path \(\pi\) in \(\GtH\) that 
-    ends at \(J\) such that for all other paths \(\tau\) in \(\Hc\), if \(\Lc(\tau) = \Lc(\pi)\),
-    then \(\tau\) does not end at \(J\). 
-    If there no path \(\tau\) in \(\Hc\) that presents \(\Lc(\pi)\), then 
-    \(\Lc(\pi) \notin \Bc(\shift{\Hc})\), and so by Lemma 1, \(\shift{\GtH}\) is reducible.
-    \todo{The rest of \(\lnot (ii) \implies \lnot (i)\) requires the same incorrect assumption above.}
-
-    Suppose (ii) does hold. We need to show that for \(u, v \in \Bc(\shift{\GtH})\),
-    there is a word \(w \in \Bc(\shift{\GtH})\) such that \(uwv \in \Bc(\shift{\GtH})\).
-    Let \(\pi, \tau\) be paths in \(\GtH\) that present \(u\) and \(v\), respectivley. 
-    If \(\tau\) starts in \(\Hc\), then by the construciton of \(\GtH\),
-    there is a path \(\rho\) in \(\GtH\) that starts at \(t(\pi)\) 
-    and ends at \(i(\tau)\). Hence, \(u\Lc(\rho)v \in \Bc(\shift{\GtH})\). Otherwise, 
-    if \(\tau\) does not start in \(\Hc\), then it must start in \(\Gc\). Similarly,
-    by the  construction of \(\GtH\), there is 
-    a path \(\rho_1\) in \(\GtH\) that starts at \(t(\tau)\) and ends at \(J\). 
-    Hence, the path \(\tau\rho_1\) ends at J. 
-    By (ii), there is a path \(\tau'\) in \(\Hc\)
-    that ends at \(J\) and presents \(\Lc(\tau\rho_1)\).
-    \todo{Instead of using (ii) and instead assuming there 
-    is a path \(\tau'\) in \(\Hc\) presenting \(\Lc(\tau)\), 
-    the proof is still valid. The fact that this path ends 
-    at \(J\) is superfluous.}
-    By the construction of \(\GtH\), 
-    there is a path \(\rho_2\) that starts at \(t(\pi)\) and ends at \(i(\tau')\). 
-    Hence, \[\Lc(\pi\rho_2\tau') = \Lc(\pi)\Lc(\rho_2)\Lc(\tau') = u \Lc(\rho_2)\Lc(\tau\rho_1) = u \Lc(\rho_2)\Lc(\tau)\Lc(\rho_1) = u \Lc(\rho_2) v \Lc(\rho_1).\]
-    As \(\Lc(\pi\rho_2\tau') \in \Bc(\shift{\GtH})\), then \(u \Lc(\rho_2) v \Lc(\rho_1) \in  \Bc(\shift{\GtH})\) and 
-    thus \(u \Lc(\rho_2) v \in  \Bc(\shift{\GtH})\).
+    Suppose there were a vertex \(I\) in \(\Gc\) that is synchronizing for \(\GtH\). 
+    Let \(v\) be a word that synchronizes to \(I\) in \(\GtH\). By \ref{hsync}, every vertex in \(\Hc\) 
+    is synchronizing for \(\GtH\), so let \(J\) be some vertex in \(\Hc\) and \(u\) be a word that synchronizes to 
+    \(J\) in \(\GtH\). As \(\shift{\GtH}\) is irreducible, there is a word \(w \in \Bc(\shift{\GtH})\) 
+    such that \(uwv \in \Bc(\shift{\GtH})\). However, any path presenting \(uwv\) must first visit 
+    \(J\) (as \(u\) is synchronizing) and then visit \(I\), implying that \(I\) is reachable 
+    from \(J\). But this contradicts the structure of \(\GtH\), so no vertex in \(\Gc\) can be 
+    synchronizing for \(\GtH\).
 \end{proof}
 
 \begin{theorem}
-    \todo{Redux of previous.}
-    The following are equivalent: 
-
-    \begin{enumerate}[(i)]
-        \item \(\shift{\GtH}\) is irreducible
-        \item for every path \(\pi\) in \(\GtH\) that starts in \(\Gc\) there is another path
-        \(\tau\) in \(\Hc\) presents the same word as \(\pi\).
-    \end{enumerate}
+    \(\shift{\GtH} = \shift{\Hc}\) iff \(S(\GtH) \subseteq S(\Hc)\).
 \end{theorem}
 
 \begin{proof}
-    Suppose (ii) does not hold. Then, there exists a path \(\pi\) in \(\GtH\) 
-    that starts in \(\Gc\) such that for every other path \(\tau\) in \(\Hc\),
-    \(\Lc(\tau) \ne \Lc(\pi)\). The latter condition is equivalent to \(\Lc(\pi) \notin \Bc(\shift{\GtH})\),
-    and we have \(\Lc(\pi) \in \Bc(\shift{\GtH})\), so by Lemma 1, \(\shift{\GtH}\) is reducible, so (ii) does not hold.
+    Suppose \(\shift{\GtH} = \shift{\Hc}\). Let \(w \in B(\shift{\GtH})\) synchronize to some vertex \(I\)
+    in \(\GtH\).
+    If \(\pi\) is some path in \(\Hc\) presenting \(w\), then it must end at \(I\). By 
+    \ref{nogsync}, \(I\) cannot be a vertex in \(\Gc\), so it must be a vertex in \(\Hc\).
+    Therefore, every path in \(\Hc\) presenting \(w\) ends at \(I\), so \(S(\GtH) \subseteq S(\Hc)\).
 
-    Suppose (ii) does hold. We need to show that for \(u, v \in \Bc(\shift{\GtH})\),
-    there is a word \(w \in \Bc(\shift{\GtH})\) such that \(uwv \in \Bc(\shift{\GtH})\).
-    Let \(\pi, \tau\) be paths in \(\GtH\) that present \(u\) and \(v\), respectivley. 
-    If \(\tau\) starts in \(\Hc\), then by the construciton of \(\GtH\), \todo{I think this should be a lemma or something for clarity. All 
-    this argument is that any vertex in \(\Hc\) is reachable from any other vertex in \(\GtH\), by the nature of \(\GtH\).}
-    there is a path \(\rho\) in \(\GtH\) that starts at \(t(\pi)\) 
-    and ends at \(i(\tau)\). Hence, \(\pi\rho\tau\) is a path in \(\GtH\) and 
-    \[\Lc(\pi\rho\tau) = \Lc(\pi)\Lc(\rho)\Lc(\tau) = u\Lc(\rho)v,\]
-    so \(u\Lc(\rho)v \in \Bc(\shift{\GtH})\). Otherwise, 
-    if \(\tau\) does not start in \(\Hc\), then it must start in \(\Gc\). By (ii),
-    there is a path \(\tau'\) in \(\Hc\) with that presents \(\Lc(\tau)\). By the construction of 
-    \(\GtH\), there is a path \(\rho\) in \(\GtH\) that starts at \(t(\pi)\) and ends at \(i(\tau')\). Hence,
-    \(\pi\rho\tau'\) is a path in \(\GtH\) and \[\Lc(\pi\rho\tau') = \Lc(\pi)\Lc(\rho)\Lc(\tau') = u \Lc(\rho)\Lc(\tau) = u \Lc(\rho)v,\]
-    so \(u\Lc(\rho)\tau \in \Bc(\shift{\GtH})\). In either case, we found a word \(w \in \Bc(\shift{\GtH})\) 
-    such that \(uwv \in \Bc(\shift{\GtH})\). Therefore, \(\GtH\) is irreducible, so (i) holds.
+    Conversely, suppose \(S(\GtH) \subseteq S(\Hc)\). Let \(u \in \Bc(\shift{\GtH})\).
+    By \ref{extensionthm}, we can extend \(u\) to a word \(uw \in \Bc(\shift{\GtH})\) that 
+    synchronizes to some vertex \(I\) in \(\GtH\). Hence, \(uw\) is synchronizing 
+    for \(\GtH\), so it is also synchronizing for \(\Hc\). But if \(uw\) is synchronizing for
+    \(\Hc\), then by definition, \(uw \in \Bc(\shift{\Hc})\). Therefore, \(\Bc(\shift{\GtH}) \subseteq \Bc(\shift{\Hc})\),
+    so \(\shift{\GtH} = \shift{\Hc}\).
 \end{proof}
 
+% \begin{theorem}
+%     \(\shift{\GtH} = \shift{\Hc}\) iff there is a function \(g : \Vc_\Gc \to \mathcal{P}(\Vc_\Hc)\) such that 
+%     for each \(K \in \Vc_\Gc\), \[F(K) \subseteq \bigcup_{L \in g(K)} F(L),\] i.e. \(F(g(K))\) covers \(F(K)\).
+% \end{theorem}
+
+% \begin{proof}
+%     Suppose such \(g\) exists. For \(w \in \Bc(\shift{\GtH})\), there is some \(K \in \Vc_{\GtH}\) such that 
+%     \(w \in F(K)\). If \(K \in \Vc_\Hc\), then \(w \in \Bc(\shift{\Hc})\). Otherwise, we have 
+%     \(K \in \Vc_\Gc\), which gives us that there is some \(L \in g(K)\) such that \(w \in F(L)\). As 
+%     \(L \in \Vc_\Hc\), then \(w \in \Bc(\shift{\Hc})\). Therefore, \(\Bc(\shift{\GtH}) \subseteq \Bc(\shift{\Hc})\) 
+%     and thus \(\shift{\GtH} = \shift{\Hc}\).
+
+%     Conversely, suppose \(\shift{\GtH} = \shift{\Hc}\). For \(K \in \Vc_\Gc\), define \[g(K) \triangleq \Vc_\Hc\]
+%     If \(w \in F(K)\), then \(w \in \Bc(\shift{\GtH})\). As \(\shift{\GtH} = \shift{\Hc}\), then 
+%     \(w \in \Bc(\shift{\Hc})\) and there is some \(L \in \Vc_\Hc\) 
+% \end{proof}
+
+% \begin{theorem}
+%     \(\shift{\GtH} = \shift{\Hc}\) iff for each \(K \in \Vc_\Gc\), there is some \(L \in \Vc_\Hc\)
+%     such that \(F(K) \subseteq \Bc(\shift{\Hc}) \).
+% \end{theorem}
+
+% \begin{proof}
+%     Conversely, suppose \(\shift{\GtH} = \shift{\Hc}\). For \(K \in \Vc_\Gc\), we have
+%     \(F(K) \subseteq \Bc(\shift{\GtH}) = \Bc(\shift{\Hc})\).
+% \end{proof}
+
+
+
+% \begin{theorem}
+%     % \todo{Redux of previous.}
+%     The following are equivalent: 
+
+%     \begin{enumerate}[(i)]
+%         \item \(\shift{\GtH}\) is irreducible
+%         \item for every path \(\pi\) in \(\GtH\) that starts in \(\Gc\) there is another path
+%         \(\tau\) in \(\Hc\) presents the same word as \(\pi\).
+%     \end{enumerate}
+% \end{theorem}
+
+% \begin{proof}
+%     Suppose (ii) does not hold. Then, there exists a path \(\pi\) in \(\GtH\) 
+%     that starts in \(\Gc\) such that for every other path \(\tau\) in \(\Hc\),
+%     \(\Lc(\tau) \ne \Lc(\pi)\). The latter condition is equivalent to \(\Lc(\pi) \notin \Bc(\shift{\GtH})\),
+%     and we have \(\Lc(\pi) \in \Bc(\shift{\GtH})\), so by Lemma 1, \(\shift{\GtH}\) is reducible, so (ii) does not hold.
+
+%     Suppose (ii) does hold. We need to show that for \(u, v \in \Bc(\shift{\GtH})\),
+%     there is a word \(w \in \Bc(\shift{\GtH})\) such that \(uwv \in \Bc(\shift{\GtH})\).
+%     Let \(\pi, \tau\) be paths in \(\GtH\) that present \(u\) and \(v\), respectivley. 
+%     If \(\tau\) starts in \(\Hc\), then by the construciton of \(\GtH\), \todo{I think this should be a lemma or something for clarity. All 
+%     this argument is that any vertex in \(\Hc\) is reachable from any other vertex in \(\GtH\), by the nature of \(\GtH\).}
+%     there is a path \(\rho\) in \(\GtH\) that starts at \(t(\pi)\) 
+%     and ends at \(i(\tau)\). Hence, \(\pi\rho\tau\) is a path in \(\GtH\) and 
+%     \[\Lc(\pi\rho\tau) = \Lc(\pi)\Lc(\rho)\Lc(\tau) = u\Lc(\rho)v,\]
+%     so \(u\Lc(\rho)v \in \Bc(\shift{\GtH})\). Otherwise, 
+%     if \(\tau\) does not start in \(\Hc\), then it must start in \(\Gc\). By (ii),
+%     there is a path \(\tau'\) in \(\Hc\) with that presents \(\Lc(\tau)\). By the construction of 
+%     \(\GtH\), there is a path \(\rho\) in \(\GtH\) that starts at \(t(\pi)\) and ends at \(i(\tau')\). Hence,
+%     \(\pi\rho\tau'\) is a path in \(\GtH\) and \[\Lc(\pi\rho\tau') = \Lc(\pi)\Lc(\rho)\Lc(\tau') = u \Lc(\rho)\Lc(\tau) = u \Lc(\rho)v,\]
+%     so \(u\Lc(\rho)v \in \Bc(\shift{\GtH})\). In either case, we found a word \(w \in \Bc(\shift{\GtH})\) 
+%     such that \(uwv \in \Bc(\shift{\GtH})\). Therefore, \(\GtH\) is irreducible, so (i) holds.
+% \end{proof}
+
+% \begin{theorem}
+%     If \(\shift{\GtH}\) is irreducible and \(\ell notin \Lc(t_H^{-1}(J))\), then ??.
+% \end{theorem}
+
+% \begin{proof}
+    
+% \end{proof}
+
+% \begin{theorem}
+%     If \(\shift{\GtH}\) is irreducible, then no vertex in \(\Gc\) is syncrhonizing for \(\GtH\).
+% \end{theorem}
+
+% \begin{proof}
+%     Suppose that \(\shift{\GtH}\) is irreducible and that there is some vertex in \(\Gc\) that is syncrhonizing for \(\GtH\).
+%     Let \(v\) be the word that synchronizes to this vertex and let \(u\) be a word 
+%     that syncrhonizes to some vertex in \(\Hc\). As \(\shift{\GtH}\) is irreducible, then 
+%     there is a word \(w \in \Bc(\shift{\GtH})\) such that \(uwv \in \Bc(\shift{\GtH})\), 
+%     so there is some path \(\pi\) in \(\GtH\) with \(\Lc(\pi) = uwv \). The subpath in \(\pi\) 
+%     presenting \(wv\) must start at some vertex in \(\Hc\) and end at some vertex in \(\Gc\),
+%     due to the synchronicity of \(u\) and \(v\). But this is a contradiction, as there is no 
+%     path from any vertex in \(\Hc\) to any vertex in \(\Gc\), so we conclude that 
+%     if \(\shift{\GtH}\) is irreducible, then no vertex in \(\Gc\) is syncrhonizing for \(\GtH\).
+% \end{proof}
+
+% \begin{theorem}
+%     If \(\shift{\GtH}\) is irreducible, then every word that is syncrhonizing for \(\GtH\) is syncrhonizing 
+%     for \(\Hc\).
+% \end{theorem}
+
+% \begin{proof}
+%     By Theorem 7, if \(\shift{\GtH}\) is irreducible, then \(\shift{\GtH} = \shift{\Hc}\). Let 
+%     \(w\) be a syncrhonizing word for \(\GtH\) and \(\pi\) be a path presenting \(w\). As 
+%     \(\shift{\GtH} = \shift{\Hc}\), there is another path \(\tau\) in \(\Hc\) presenting 
+%     \(w\). But \(\tau\) is also in \(\GtH\) and it presents \(w\), so it must syncrhonize
+% \end{proof}
 
 \newpage
 
@@ -468,7 +663,7 @@ Give reduction from irreducible shift to minimality, conclude minimality is GI-h
         \(uvl \in \Bc(\shift{\Kc})\) and \(u \in \Bc(\shift{\Kc})\). As \(\shift{\Kc}\)
         is irreducible, there exists a word \(w \in \Bc(\shift{\Kc})\) such that 
         \(uvlwu \in \Bc(\shift{\Kc})\). A path presenting \(uvlwu\) must have the 
-        subpath presenting \(wu\) visit verticies only from the \(\Hc\) subgraph of \(\Kc\).
+        subpath presenting \(wu\) visit vertices only from the \(\Hc\) subgraph of \(\Kc\).
         This implies that there is a path in \(\Hc\) presenting \(u\), so we have 
         \(u \in \Bc(\shift{\Hc})\) and therefore \(\Bc(\shift{\Gc}) \subseteq \Bc(\shift{\Hc})\),
         and \(\shift{\Gc} \subseteq \shift{\Hc}\) via Lemma 1.
@@ -504,11 +699,11 @@ Give reduction from irreducible shift to minimality, conclude minimality is GI-h
     \begin{theorem}
         Let \(\Gc\) and \(\Hc\) be irreducible, minimal, right-resolving presentations. 
         If \(\shift{\Gc} = \shift{\Hc}\), then there exists a pair
-        of verticies \((I, J) \in (\Vc_\Gc \times \Vc_\Hc)\) such that both the graph connecting \(\Gc\) to \(\Hc\) via 
+        of vertices \((I, J) \in (\Vc_\Gc \times \Vc_\Hc)\) such that both the graph connecting \(\Gc\) to \(\Hc\) via 
         \(I\) and \(J\) and the graph connecting \(\Hc\) to \(\Gc\) via \(J\) and \(I\) both 
         present irreducible shifts.
 
-        Equivalently, if for every pair of verticies \((I, J) \in (\Vc_\Gc, \Vc_\Hc)\) 
+        Equivalently, if for every pair of vertices \((I, J) \in (\Vc_\Gc, \Vc_\Hc)\) 
         the graph connecting \(\Gc\) to \(\Hc\) via \(I\) and \(J\) 
         and the graph connecting \(\Hc\) to \(\Gc\) via \(J\) and \(I\)
         do not both present irreducible shifts.

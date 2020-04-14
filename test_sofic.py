@@ -115,7 +115,7 @@ def test_is_irreducible():
     assert is_irreducible(G5)
 
 
-def test_presents_irreducible_shift():
-    assert presents_irreducible_shift(G2)
-    assert presents_irreducible_shift(G4)
-    assert not presents_irreducible_shift(G6)
+# def test_presents_irreducible_shift():
+#     assert presents_irreducible_shift(G2)
+#     assert presents_irreducible_shift(G4)
+#     assert not presents_irreducible_shift(G6)
