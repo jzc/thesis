@@ -25,6 +25,8 @@
 \newcommand{\shift}[1]{\mathsf{X}_{#1}}
 \newcommand{\term}[1]{\textit{#1}}
 \newcommand{\Sync}{\textsf{Sync}}
+\newcommand{\GI}{\textsf{GI}}
+\newcommand{\LGI}{\textsf{LGI}}
 
 \usepackage[bitstream-charter, cal=cmcal]{mathdesign}
 
@@ -268,19 +270,6 @@ is reachable from any vertex in \(\Hc\).
     \(\Bc(\shift{\GtH})\) joining the word \(uw\) and \(u\), so \(\shift{\GtH} \) is reducible.
 \end{proof}
 
-\begin{theorem}
-    If \(\shift{\GtH}\) is irreducible, then \(\shift{\Gc} \subseteq \shift{\Hc}\).
-\end{theorem}
-
-\begin{proof}
-    Suppose \(\shift{\GtH}\) is irreducible, and let \(u \in \Bc(\shift{\Gc})\). By Theorem 1, we can extend 
-    \(u\) on the right to \(u s_J \in \Bc(\shift{\GtH})\), so that any 
-    path presenting \(u s_J\) ends at \(J\). As \(\shift{\GtH}\) is irreducible,
-    there exists a word \(w \in \Bc(\shift{\GtH})\) such that \(u s_J w u \in \Bc(\shift{\GtH})\).
-    The \(wu\) subword must be presented by some path in \(\Hc\) as \(u s_J\) 
-    synchronizes to \(J \in \Vc_\Hc\). Hence \(u \in \Bc(\shift{\Hc})\), so \(\shift{\Gc} \subseteq \shift{\Hc}\).
-\end{proof}
-
 % \begin{theorem}
 %     If \(\shift{\GtH}\) is irreducible, then \(\ell \in \Lc(t^{-1}_H(J))\).
 %     % and for all \(w \in B(\shift{\Gc})\),
@@ -355,8 +344,8 @@ is reachable from any vertex in \(\Hc\).
 %     thus \(u \Lc(\rho_2) v \in  \Bc(\shift{\GtH})\).
 % \end{proof}
 
-\begin{theorem}
-    \(\shift{\GtH}\) is irreducible iff \(\shift{\GtH} = \shift{\Hc}\).
+\begin{theorem}\label{irreq}
+    \(\shift{\GtH}\) is irreducible if and only if \(\shift{\GtH} = \shift{\Hc}\).
 \end{theorem}
 
 \begin{proof}
@@ -366,6 +355,15 @@ is reachable from any vertex in \(\Hc\).
     \(\Bc(\shift{\GtH}) = \Bc(\shift{\Hc})\) so \(\shift{\GtH} = \shift{\Hc}\).
     Conversely, suppose \(\shift{\GtH} = \shift{\Hc}\). As \(\shift{\Hc}\) is irreducible, then so 
     is \(\shift{\GtH}\).
+\end{proof}
+
+\begin{corollary}
+    If \(\shift{\GtH}\) is irreducible, then \(\shift{\Gc} \subseteq \shift{\Hc}\).
+\end{corollary}
+
+\begin{proof}
+    By \ref{irreq}, if \(\shift{\GtH}\) is irreducible, then \(\shift{\GtH} = \shift{\Hc}\).
+    As \(\shift{\Gc} \subseteq \shift{\GtH}\), then \(\shift{\Gc} \subseteq \shift{\Hc}\).
 \end{proof}
 
 \begin{theorem}\label{nogsync}
@@ -384,7 +382,7 @@ is reachable from any vertex in \(\Hc\).
 \end{proof}
 
 \begin{theorem}
-    \(\shift{\GtH} = \shift{\Hc}\) iff \(S(\GtH) \subseteq S(\Hc)\).
+    \(\shift{\GtH} = \shift{\Hc}\) if and only if \(S(\GtH) \subseteq S(\Hc)\).
 \end{theorem}
 
 \begin{proof}
@@ -401,6 +399,11 @@ is reachable from any vertex in \(\Hc\).
     \(\Hc\), then by definition, \(uw \in \Bc(\shift{\Hc})\). Therefore, \(\Bc(\shift{\GtH}) \subseteq \Bc(\shift{\Hc})\),
     so \(\shift{\GtH} = \shift{\Hc}\).
 \end{proof}
+
+\begin{theorem}
+    If there is a word \(w\) that is synchronizing for \(\GtH\) but 
+    not synchornizing for \(\Hc\), then \(|w| \leq ??\).
+\end{theorem}
 
 % \begin{theorem}
 %     \(\shift{\GtH} = \shift{\Hc}\) iff there is a function \(g : \Vc_\Gc \to \mathcal{P}(\Vc_\Hc)\) such that 
@@ -806,4 +809,112 @@ Give reduction from irreducible shift to minimality, conclude minimality is GI-h
         where \(V\) is the number of verticies of one graph and \(E\)
         is the number of edges of one graph.
     \end{proof}
+
+\newpage
+
+\section{Graph isomorphisms}
+
+\begin{definition}
+    An \term{undirected graph} is a pair \(G = (V, E)\), where \(V\) is a 
+    finite set of vertices and \(E \subseteq V \times V\) is a symmetric and irreflexive relation
+    on \(V\).
+\end{definition}
+
+\begin{definition}
+    Given undirected graphs \(G = (V_G, E_G)\) and \(H = (V_H, E_H)\), an isomorphism from \(G\) to \(H\)
+    is a bijection \(\varphi : V_G \to V_H\) such that for all \(I, J \in V_G\), 
+    \((I, J) \in E_G\) if and only if \((\varphi(I), \varphi(J)) \in E_H\). If there is 
+    and isomorphism from \(G\) to \(H\), then we say \(G\) and \(H\) are isomorphic.
+
+    Given labeled graphs \(\Gc\) and \(\Hc\), an isomorphism from \(\Gc\) to \(\Hc\) 
+    is a pair of bijections \(\partial\Phi : \Vc_\Gc \to \Vc_\Hc\) and \(\Phi : \Ec_\Gc \to \Ec_\Hc\)
+    such that for all \(e \in \Ec_\Gc\), \(i_\Hc(\Phi(e)) = \partial\Phi(i_\Gc(e))\), 
+    \(t_\Hc(\Phi(e)) = \partial\Phi(t_\Gc(e))\), and \(\Lc_\Hc(\Phi(e)) = \Lc_\Gc(e)\).
+\end{definition}
+
+\begin{definition}
+    Define the decision problem \(\GI\) to be the set of all pairs of isomorphic undirected graphs:
+    \[\GI \triangleq \{ \langle G, H \rangle : G \text{ and } H \text{ are isomorphic undirected graphs} \}\]
+    Similary, define the decision problem \(\LGI\) to be the set of all pairs of isomorphic labeled graphs:
+    \[\LGI \triangleq \{ \langle \Gc, \Hc \rangle : \Gc \text{ and } \Hc \text{ are isomorphic labeled graphs} \}\]
+\end{definition}
+
+\begin{definition}
+    Let \(A\) be some decision problem. We say \(A\) is \term{\(\GI\)-hard} if \(\GI\) is polynomial-time Turing reducible 
+    to \(A\). We say \(A\) is \term{\(\GI\)-complete} if \(A\) is \(\GI\)-hard and \(A\) is polynomial-time
+    Turing reducible to \(\GI\).
+\end{definition}
+
+\begin{theorem}
+    \(\LGI\) is \(\GI\)-hard.
+\end{theorem}
+
+\begin{proof}
+    % Let \(\Gc\) and \(\Hc\) be labeled graphs. Construct the undirected graph \(G\),
+    % setting \(V_G \triangleq \Vc_\Gc\) and setting \(E_G\) 
+    % to be the reflexive closure of \(\{ (I, J) \in \Vc_\Gc \times \Vc_\Gc : I \neq J, i(e) = I \text{ and } t(e) = J \text{ for some } e \in \Ec_\Gc \}\).
+    % Construct the undirected graph \(H\) in a similar fashion. 
+    
+    % Suppose \((\partial\Phi, \Phi)\) is an isomorphism from \(\Gc\) to \(\Hc\), then \(\partial\Phi\)
+    % is an isomorphism from \(G\) to \(H\). Let \(I, J \in V_G\). If \((I, J) \in E_G\), 
+    % then \(\partial\Phi(I)\)
+
+    First, we will show that \(\LGI\) is \(\GI\)-hard. Let 
+    \(G\) and \(H\) be undirected graphs. Construct the labeled graph \(\Gc\) 
+    with \(\Vc_\Gc \triangleq V_G\), \(\Ec_\Gc \triangleq E_G\) and for all \(I, J \in \Ec_\Gc\),
+    \(i_\Gc(I, J) \triangleq I\), \(t_\Gc(I, J) \triangleq J\), and \(\Lc_\Gc(I, J) \triangleq \ell\). 
+    Construct the labeled graph \(\Hc\) in a similar fashion. Obviously, this construction can be done in polynomial-time with respect 
+    to the size of \(G\) and \(H\).
+
+    Suppose \(\varphi\) is an isomorphism from \(G\) to \(H\). Define the map 
+    \(\partial\Phi : \Vc_\Gc \to \Vc_\Hc\) with \(\partial\Phi(I) \triangleq \varphi(I)\) for \(I \in \Vc_\Gc\) 
+    and \(\Phi : \Ec_\Gc \to \Ec_\Hc\) with \(\Phi(I, J) \triangleq (\varphi(I), \varphi(J))\)
+    for \(I, J \in \Ec_\Gc\).
+    % then we can show the maps 
+    % \(\partial\Phi \triangleq \varphi\) and \(\Phi \triangleq \varphi \times \varphi\)
+    % \footnote{
+    %     For functions \(f: A \to C\) and \(g: B \to D\), define the product \(f \times g : A \times B \to C \times D\)
+    %     as \((f \times g)(a, b) \triangleq (f(a), g(b))\).
+    % }
+    % are an isomorphism from \(\Gc\) to 
+    % \(\Hc\).
+    Let \((I, J) \in \Ec_\Gc\). Then, 
+    \begin{align*}
+        \partial\Phi(i_\Gc(I, J)) &= \partial\Phi(I) \\ 
+        &= \varphi(I) \\
+        &= i_\Hc(\varphi(I), \varphi(J)) \qquad (\star)\\ 
+        &= i_\Hc(\Phi(I, J)),
+    \end{align*}
+    and \((\star)\) is well-defined as \((I, J) \in \Ec_\Gc = E_G\) if and only if \((\varphi(I), \varphi(J)) \in E_H = \Ec_\Hc\).
+    A similar deduction can be used to show \(\partial\Phi(t_\Gc(I, J)) = t_\Hc(\Phi(I, J))\). 
+    As \(\varphi\) is a bijection from \(V_G\) to \(V_H\), then \(\partial\Phi\) is a 
+    bijection from \(\Vc_\Gc\) to \(\Vc_\Hc\). One can check that for \(\Phi^{-1}(I, J) \triangleq (\varphi^{-1}(I), \varphi^{-1}(J))\),
+    \(\Phi^{-1} \circ \Phi = id_{\Ec_\Gc}\) and \(\Phi \circ \Phi^{-1} = id_{\Ec_\Hc}\) 
+    so \(\Phi\) is a bijection from \(\Gc\) to \(\Hc\). Hence, \((\partial\Phi, \Phi)\) is an 
+    isomorphism from \(\Gc\) to \(\Hc\).
+
+    Conversely, suppose \((\partial\Phi, \Phi)\) is an isomorphism from \(\Gc\) to \(\Hc\). Define 
+    \(\varphi : V_G \to V_H\) with \(\varphi(I) \triangleq \partial\Phi(I)\) for \(I \in V_G\). 
+    Note that for \((I, J) \in \Ec_\Hc\), \((I, J) = (i_\Hc(I,J), t_\Hc(I, J))\). If \((I, J) \in E_G\),
+    then 
+    \begin{align*}
+        i_\Hc(\Phi(I, J)) &= \partial\Phi(i_\Gc(I, J)) \\ 
+        &= \partial\Phi(I) \\ 
+        t_\Hc(\Phi(I, J)) &= \partial\Phi(t_\Gc(I, J)) \\ 
+        &= \partial\Phi(J),
+    \end{align*}
+    so \(\Phi(I, J) = (i_\Hc(\Phi(I, J)), t_\Hc(\Phi(I, J))) = (\partial\Phi(I), \partial\Phi(J)) = (\varphi(I), \varphi(J))\).
+    Therefore, as \(\Phi(I, J) \in \Ec_\Hc = E_H\), then \((\varphi(I), \varphi(J)) \in E_H\).
+    Simlarly, note that for \(I, J \in E_\Gc\), \((I, J) = (i_\Gc(I, J), t_\Gc(I, J))\). If 
+    \((\varphi(I), \varphi(J)) \in E_H\), then 
+    \begin{align*}
+        i_\Hc(\Phi(I, J)) &= \partial\Phi(i_\Gc(I, J)) \\ 
+        &= \partial\Phi(I) \\ 
+        t_\Hc(\Phi(I, J)) &= \partial\Phi(t_\Gc(I, J)) \\ 
+        &= \partial\Phi(J),
+    \end{align*}
+    
+\end{proof}
+    
+
 \end{document}
