@@ -4,6 +4,7 @@ import random
 from collections import deque
 import heapq 
 from datetime import datetime
+from itertools import product
 
 
 def is_labeled(G):
@@ -340,47 +341,74 @@ def make_scc_dag(G):
 
     return Gp
 
-
-# def covered_by_set(G, I, S):    
-#     S0 = S
-#     covered_by
-#     q = deque([(I, S0)])
-#     visited = set()
-#     while q:
-#         I, S = q.popleft()
-#         visited.add((I, S))
-
-#         print(str((I,S)))
-#         if S == iset():
-#             return False
-
-#         if I in S:
-#             return True
-
-#         for _, J, l in G.out_edges(I, data="label"):
-#             T = transition_subset(G, S, l)
-#             if (J, T) not in visited:
-#                 q.append((J, T))
-
-
-# def covered_by(G, S, T):
+def add_kill_state(G, alphabet=None):
+    Gp = nx.MultiDiGraph(G)
+    Gp.add_node("K")
     
+    if alphabet is None:
+        alphabet = {l for _, _, l in G.edges(data="label")}
+
+    for I in Gp:
+        out_labels = {l for _, _, l in G.edges(I, data="label")}
+        for a in (alphabet - out_labels):
+            Gp.add_edge(I, "K", label=a)
+        
+    return Gp
 
 
-# def presents_irreducible_shift(G):
-#     dag = make_scc_dag(G)
-#     sinkset = (s for s in dag if not dag.out_edges(s))
-#     sinkset = iset(i for s in sinkset for i in s)
+def label_product(G, H):
 
-#     V = set(G) - sinkset
-#     while V:
-#         print(V)
-#         I = next(iter(V))
-#         covered = covered_by_set(G, I, sinkset)
-#         if not covered:
-#             return False
-#         else:
-#             V -= covered
+    GH = nx.MultiDiGraph()
+    GH.add_nodes_from(product(G, H))
 
-#     return True
-            
+    for (I, J) in GH:
+        I_labels = {l for _, _, l in G.out_edges(I, data="label")}
+        J_labels = {l for _, _, l in H.out_edges(J, data="label")}
+        for l in (I_labels & J_labels):
+            Ip = transition(G, I, l)
+            Jp = transition(H, J, l)
+            assert Ip is not None
+            assert Jp is not None
+            GH.add_edge((I, J), (Ip, Jp), label=l)
+
+    return GH  
+
+
+def first(it):
+    return next(iter(it))
+
+
+def is_subshift(G, H):
+    alphabet = {l for _, _, l in G.edges(data="label")} | {l for _, _, l in H.edges(data="label")}
+    Hk = add_kill_state(H, alphabet=alphabet)
+    GH = label_product(G, Hk)
+    paths = nx.shortest_path(GH)
+
+    for (I, J) in product(G, H):
+        X = list(H)
+        w = ""
+        while True:
+            path_exists = False
+            for A in G:
+                if (A, "K") in paths[I, J]:
+                    # there is a path starting at I labeled wp that 
+                    # takes J to the kill state 
+                    path_exists = True
+                    path = paths[I, J][A, "K"]
+                    wp = "".join([first(GH[a][b].values())["label"] for a, b in zip(path, path[1:])])
+                    I = transition(G, I, wp)
+                    X = transition_subset(H, X, wp)
+                    w += wp
+                    break
+
+            if not path_exists:
+                break
+
+            if len(X) == 0:
+                # w in language of G but not in language of H
+                return w  
+            else:
+                # update J to be some element from X
+                J = first(X)
+
+    return True
