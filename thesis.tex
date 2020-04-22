@@ -1,13 +1,19 @@
-\documentclass{article}
+\documentclass[hidelinks]{article}
 \usepackage{amsmath, amssymb, amsthm}
 \usepackage{thmtools}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{nameref, hyperref, cleveref}
 \usepackage{tikz}
 \usepackage[shortlabels]{enumitem}
 \usepackage{todonotes}
+\usepackage{enumitem}
 
 \usepackage[left=2.2in, right=1.25in, marginparwidth=1.7in]{geometry}
 
 \reversemarginpar
+
+\setenumerate{itemsep=-.5ex}
 
 \usetikzlibrary{positioning, arrows.meta, shapes}
 
@@ -21,7 +27,7 @@
 \newcommand{\Kc}{\mathcal{K}}
 \newcommand{\Fc}{\mathcal{F}}
 \newcommand{\Fs}{\mathsf{F}}
-\newcommand{\GtH}{\Gc^\to\Hc}
+\newcommand{\GtH}{{\Gc^\to\Hc}}
 \newcommand{\shift}[1]{\mathsf{X}_{#1}}
 \newcommand{\term}[1]{\textit{#1}}
 \newcommand{\Sync}{\textsf{Sync}}
@@ -119,14 +125,17 @@ Let \(x=(x_i)_{i \in \mathbb{Z}}\) be a bi-infinite sequence. For \(i \leq j\), 
 \end{definition}
 
 \noindent As a consequence of this definintion, \(\Bc(\shift{G})\) is the 
-set of all finite paths on \(G\), so elements of \(\Bc(\shift{G})\) are called
-\term{paths on \(G\)}.
+set of all finite paths \todo{Define paths.} on \(G\), so elements of \(\Bc(\shift{G})\) are called
+\term{paths on \(G\)}. \todo{Only if \(G\) is essential. Otherwise, if \(G\) 
+is not essential, then there can be paths not in \(\Bc(\shift{G})\).}
 
 
 \begin{definition}
     Let \(\Gc = (G, \Lc)\) be a labeled graph. The \term{presentation of \(\Gc\)} is the set \(\shift{\Gc}\)
     of the labels of all bi-infinite paths from \(\shift{G}\), defined as the image of 
-    \(\shift{G}\) under \(\Lc_\infty\): \[\shift{\Gc} \triangleq \Lc_\infty(\shift{G}).\]
+    \(\shift{G}\) under \(\Lc_\infty\):
+    \todo{Define sliding block codes so \(\Lc_\infty\) makes sense.}
+    \[\shift{\Gc} \triangleq \Lc_\infty(\shift{G}).\]
     We say a word \(w \in \Bc(\shift{\Gc})\) is \term{presented by a path} \(\pi \in \Bc(\shift{G})\) if \(\Lc(\pi) = w\).
 \end{definition}
 
@@ -151,6 +160,63 @@ set of all finite paths on \(G\), so elements of \(\Bc(\shift{G})\) are called
     % same vertex. A vertex \(I \in \Vc_\Gc\) is synchronizing if there is a word \(w\) such 
     % that all words that present \(w\) end at \(I\). 
 \end{definition}
+
+Let \(\Gc\) be a deterministic labeled graph. It follows that for every vertex \(I\) in \(\Gc\)
+and every \(w \in F(I)\), there is a unique path labeled \(w\) starting at \(I\). We can 
+define a partial \term{transition function} \(\delta_\Gc : \Vc_\Gc \times \Ac_\Gc^* \to \Vc_\Gc\) 
+\todo{Define \(\Ac_\Gc\).}
+with \(\delta_\Gc(I, w) \triangleq t(\pi)\) if there is a path \(\pi\) labeled \(w\) starting 
+at \(I\). If \(w = \Lc(\pi)\) and \(\Lc(\tau)\) for paths \(\pi\) and \(\tau\), then by 
+determinism, \(\pi = \tau\) so \(t(\pi) = t(\tau)\), so this function is well defined.
+It will be useful to make \(\delta_\Gc\) total by first defining \(\Vc_\Gc^0 \triangleq \Vc_\Gc \cup \{0\}\),
+where \(0\) is a constant distinct from \(\Vc_\Gc\). Then, by extending the domain of \(\delta_\Gc\) to 
+\(\Vc_\Gc^0 \times \Ac_\Gc^*\) and the codomain to \(\Vc_\Gc^0\), define \(\delta_\Gc(I, w) \triangleq 0\) 
+if \(w \notin F(I)\) and \(\delta_\Gc(0, w) = 0\). Finally, define 
+the \term{subset transition function} \(\Delta_\Gc : \mathcal{P}(\Vc) \times w \to \mathcal{P}(\Vc)\)
+with \(\Delta_\Gc(S, w) \triangleq \{ \delta_\Gc(I, w) : I \in S \text{ and } \delta_\Gc(I, w) \neq 0\}\).
+
+\begin{theorem}
+    Let \(\Gc\) be a deterministic labeled graph, and \(I\) be a vertex in \(\Gc\). The following properties of the 
+    transition function are true:
+
+    \begin{enumerate}[(i)]
+        \item \(w \in F(I)\) if and only if \(\delta_\Gc(I, w) \neq 0\)
+        \item \(w \in \Bc(\shift\Gc)\) if and only if \(\Delta_\Gc(\Vc_\Gc, w) \neq \varnothing\)
+        \item \(w\) synchronizes to \(I\) if and only if \(\Delta_\Gc(\Vc_\Gc, w) = \{I\}\)
+    \end{enumerate}
+\end{theorem}
+
+\begin{definition}
+    Let \(\Gc\) be an essential labeled graph. The \term{\(\Gc\) kill state graph with alphabet \(\Ac\)}
+    is the labeled graph \(\Gc^0\) taking the same vertices and edges as \(\Gc\) with 
+    an additional vertex \(0\) and edges such that for each \(a \in \Ac\) and vertex \(I\) in \(\Gc\),
+    if there is no edge starting at \(I\) labeled \(a\), then there is an edge in \(\Gc^0\) 
+    between \(I\) and \(0\) labeled a.
+\end{definition}
+
+\begin{definition}
+    Let \(\Gc\) and \(\Hc\) be labeled graphs. The \term{label product of \(\Gc\) and \(\Hc\)}
+    is the labeled graph \(\Gc * \Hc\) such that if there is an edge \(e_1\) in \(\Gc\)
+    between \(I_1\) and \(J_1\) and an edge \(e_2\) in \(\Hc\) between \(I_2\) and \(J_2\)
+    with \(\Lc_\Gc(e_1) = \Lc_\Hc(e_2)\), then there is an edge in \(\Gc * \Hc\) between 
+    \((I_1, I_2)\) and \((J_1, J_2)\) labeled \(\Lc_\Gc(e_1) = \Lc_\Hc(e_2)\). That is, 
+    \begin{align*}
+        \Vc_{\Gc * \Hc} &\triangleq \Vc_\Gc \times \Vc_\Hc \\ 
+        \Ec_{\Gc * \Hc} &\triangleq \{ (e_1, e_2) \in \Ec_\Gc \times \Ec_\Hc\ : \Lc(e_1) = \Lc(e_2)\} \\ 
+        i_{\Gc * \Hc}(e_1, e_2) &\triangleq (i_\Gc(e_1), i_\Gc(e_2)) \\ 
+        t_{\Gc * \Hc}(e_1, e_2) &\triangleq (t_\Hc(e_1), t_\Hc(e_2)) \\ 
+        \Lc_{\Gc * \Hc}(e_1, e_2) &\triangleq \Lc_\Gc(e_1) \qquad ( = \Lc_\Hc(e_2) )
+    \end{align*}
+\end{definition}
+
+\begin{theorem}
+    If there is a path in \(\Gc * \Hc\) labeled \(w\) starting at \((I, J)\), then 
+    there is a path in \(\Gc\) labeled \(w\) starting at \(I\) and a path in \(\Hc\)
+    labeled \(w\) starting at \(J\).
+\end{theorem}
+
+\todo[inline]{Add theorem showing that \(\shift{G}\) and \(\shift{\Gc}\) are shift spaces.}
+\todo[inline]{Add theorem showing that shift spaes are uniquely defined by a language.}
 
 % \section{Basic properties of sofic shifts}
 
@@ -250,7 +316,7 @@ is reachable from any vertex in \(\Hc\).
 
 \begin{proof}
     For a vertex \(I\) in \(\Hc\), take any word \(u \in \Bc(\shift{\GtH})\) and
-    use \ref{extensionthm} to synchronize it to \(I\). Hence, there is a word that synchronizes 
+    use \Cref{extensionthm} to synchronize it to \(I\). Hence, there is a word that synchronizes 
     to \(I\), so \(I\) is synchronizing.
 \end{proof}
 
@@ -260,7 +326,7 @@ is reachable from any vertex in \(\Hc\).
 \end{lemma}
 
 \begin{proof}
-    By \ref{extensionthm}, we can extend \(u\) on the right to a word \(uw \in \Bc(\shift{\GtH})\)
+    By \Cref{extensionthm}, we can extend \(u\) on the right to a word \(uw \in \Bc(\shift{\GtH})\)
     so that any path presenting \(uw\) ends at some vertex \(I\) in \(\Hc\). Hence, for any word \(v \in F(uw)\), a 
     path presenting \(uwv\) ends at some vertex in \(\Hc\), so \(F(uwv) \subseteq \Bc(\shift{\Hc})\)
     \todo{Probably will expand this later. Argue that \(uwv\) is synchronizing, so \(F(uwv) = F(J)\)
@@ -348,7 +414,7 @@ is reachable from any vertex in \(\Hc\).
 \end{theorem}
 
 \begin{proof}
-    Suppose \(\shift{\GtH}\) is irreducible, and let \(w \in \Bc(\shift{\GtH})\). By \ref{wordlemma}, 
+    Suppose \(\shift{\GtH}\) is irreducible, and let \(w \in \Bc(\shift{\GtH})\). By \Cref{wordlemma}, 
     as \(\shift{\GtH}\) is irreducible, then \(w \in \Bc(\shift{\Hc})\), so \(\Bc(\shift{\GtH}) \subseteq \Bc(\shift{\Hc})\).
     By construction of \(\GtH\), we have \(\Bc(\shift{\Hc}) \subseteq \Bc(\shift{\GtH})\). Therefore, 
     \(\Bc(\shift{\GtH}) = \Bc(\shift{\Hc})\) so \(\shift{\GtH} = \shift{\Hc}\).
@@ -361,7 +427,7 @@ is reachable from any vertex in \(\Hc\).
 \end{corollary}
 
 \begin{proof}
-    By \ref{irreq}, if \(\shift{\GtH}\) is irreducible, then \(\shift{\GtH} = \shift{\Hc}\).
+    By \Cref{irreq}, if \(\shift{\GtH}\) is irreducible, then \(\shift{\GtH} = \shift{\Hc}\).
     As \(\shift{\Gc} \subseteq \shift{\GtH}\), then \(\shift{\Gc} \subseteq \shift{\Hc}\).
 \end{proof}
 
@@ -371,7 +437,7 @@ is reachable from any vertex in \(\Hc\).
 
 \begin{proof}
     Suppose there were a vertex \(I\) in \(\Gc\) that is synchronizing for \(\GtH\). 
-    Let \(v\) be a word that synchronizes to \(I\) in \(\GtH\). By \ref{hsync}, every vertex in \(\Hc\) 
+    Let \(v\) be a word that synchronizes to \(I\) in \(\GtH\). By \Cref{hsync}, every vertex in \(\Hc\) 
     is synchronizing for \(\GtH\), so let \(J\) be some vertex in \(\Hc\) and \(u\) be a word that synchronizes to 
     \(J\) in \(\GtH\). As \(\shift{\GtH}\) is irreducible, there is a word \(w \in \Bc(\shift{\GtH})\) 
     such that \(uwv \in \Bc(\shift{\GtH})\). However, any path presenting \(uwv\) must first visit 
@@ -388,11 +454,11 @@ is reachable from any vertex in \(\Hc\).
     Suppose \(\shift{\GtH} = \shift{\Hc}\). Let \(w \in B(\shift{\GtH})\) synchronize to some vertex \(I\)
     in \(\GtH\).
     If \(\pi\) is some path in \(\Hc\) presenting \(w\), then it must end at \(I\). By 
-    \ref{nogsync}, \(I\) cannot be a vertex in \(\Gc\), so it must be a vertex in \(\Hc\).
+    \Cref{nogsync}, \(I\) cannot be a vertex in \(\Gc\), so it must be a vertex in \(\Hc\).
     Therefore, every path in \(\Hc\) presenting \(w\) ends at \(I\), so \(S(\GtH) \subseteq S(\Hc)\).
 
     Conversely, suppose \(S(\GtH) \subseteq S(\Hc)\). Let \(u \in \Bc(\shift{\GtH})\).
-    By \ref{extensionthm}, we can extend \(u\) to a word \(uw \in \Bc(\shift{\GtH})\) that 
+    By \Cref{extensionthm}, we can extend \(u\) to a word \(uw \in \Bc(\shift{\GtH})\) that 
     synchronizes to some vertex \(I\) in \(\GtH\). Hence, \(uw\) is synchronizing 
     for \(\GtH\), so it is also synchronizing for \(\Hc\). But if \(uw\) is synchronizing for
     \(\Hc\), then by definition, \(uw \in \Bc(\shift{\Hc})\). Therefore, \(\Bc(\shift{\GtH}) \subseteq \Bc(\shift{\Hc})\),
@@ -400,9 +466,142 @@ is reachable from any vertex in \(\Hc\).
 \end{proof}
 
 \begin{theorem}
-    If there is a word \(w\) that is synchronizing for \(\GtH\) but 
-    not synchornizing for \(\Hc\), then \(|w| \leq ??\).
+    If \(w \in S(\GtH)\) but \(w \notin S(\Hc)\), then \(w \notin \Bc(\shift{\Hc})\). 
 \end{theorem}
+
+\begin{proof}
+    As \(w \in S(\GtH)\), there is a vertex \(I\) in \(\GtH\) such that every path in 
+    \(\GtH\) presenting \(w\) ends at \(I\).
+    If \(w \notin S(\Hc)\), then either 
+    \(w \notin \Bc(\shift{\Hc})\) or for every vertex \(J\) in \(\Hc\) there is a path
+    in \(\Hc\) that presents \(w\) but does not end at \(J\). Hence if the latter 
+    condition were true, then this implies there is a path in \(\Hc\) that presents \(w\) 
+    and does not end at \(I\). But this path is also in \(\GtH\) and presents \(w\), so it 
+    should end at \(I\), which is a contradiction. Therefore, \(w \notin \Bc(\shift{\Hc})\).
+\end{proof}
+
+\begin{theorem}
+    \(\shift{\GtH}\) is irreducible if and only if \(\shift{\Gc} \subseteq \shift{\Hc}\) and for all vertices 
+    \(I\) in \(\Gc\) there is a word \(w\) and vertex \(J\) in \(\Hc\) such that \(\delta_\GtH(I, w) = \delta_\GtH(J, w)\).
+\end{theorem}
+
+\begin{proof}
+    Suppose \(\shift{\Gc} \subseteq \shift{\Hc}\) and for all vertices 
+    \(I\) in \(\Gc\) there is a word \(w\) and vertex \(J\) in \(\Hc\) such that \(\delta_\GtH(I, w) = \delta_\GtH(J, w)\).
+    Let \(w \in \Bc(\shift{\GtH})\) and \(\pi\) be a path in \(\GtH\) presenting \(w\). 
+    If \(\pi\) starts in \(\Hc\), then \(w \in \Bc(\shift{\Hc})\). Otherwise, \(\)
+\end{proof}
+
+\newpage
+
+\section{Subshift testing}
+
+\begin{algorithm}[H]
+    \caption{Subshift testing}\label{algsubshift}
+    \begin{algorithmic}[1]
+        \Require $\Gc$ and $\Hc$ are deterministic, irreducible labeled graphs
+        \Procedure{is\_subshift}{$\Gc, \Hc$}
+            % \State construct \(\Hc^0\) with alphabet \(\Ac_\Gc \cup \Ac_\Hc\)
+            % \State construct \(\Gc * \Hc^0\)
+            % \For{$(I, J) \in \Vc_\Gc \times \Vc_\Hc$}
+            \For{$I \in \Vc_\Gc$}
+                \State $X \gets \Vc_\Hc$
+                \State $w \gets \epsilon$
+                % \State $I \gets I_0$
+                \Repeat
+                    \State $J \gets$ any element in $X$
+                    \State find a word $u$ such that $\delta_\Gc(I, u) \neq 0$ and $\delta_\Hc(J, u) = 0$ 
+                    % \State find a path $\pi$ in $\Gc*\Hc^0$ from $(I,J)$ to any vertex in $\{(K, 0) : K \in \Vc_\Gc\}$
+                    \If{$u$ exists}
+                        \State $w \gets wu$
+                        \State $I \gets \delta_\Gc(I, u)$
+                        \State $X \gets \Delta_\Hc(X, u)$
+                        \If{$X = \varnothing$} 
+                            \State \Return false
+                        \EndIf
+                        % \State $J \gets$ any element in $X$
+                    \EndIf
+                \Until{$u$ does not exist}
+            \EndFor
+            \State \Return true
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+% \newpage
+
+\begin{theorem}
+    If \(\Gc\) and \(\Hc\) are essential, deterministic labeled graphs, 
+    then \Cref{algsubshift} always terminates and returns true if and only if \(\shift{\Gc} \subseteq \shift{\Hc}\).
+\end{theorem}
+    
+\begin{proof}
+    First, we need to show that for the loop on lines 8-19, if \(I_0\) is the 
+    value of \(I\) before entering the loop, the invariants 
+    \begin{enumerate}[(i)]
+        \item \(\delta_\Gc(I_0, w) = I\)
+        \item \(I \neq 0\)
+        \item \(\Delta_\Hc(\Vc_\Hc, w) = X\)
+    \end{enumerate}
+    hold before the beginning of each iteration the loop. Additionally, we need to show that 
+    the loop always terminates.
+
+    Clearly, \(I = I_0\) and \(w = \epsilon\) before entering the loop, so \(\Delta_\Gc(I_0, w) = \delta_\Gc(I, \epsilon) = I\).
+    As \(I_0 \in \Vc_\Gc\), we have that \(I \neq 0\). Finally, as \(X = \Vc_\Gc\) before 
+    entering the loop, \(\Delta_\Hc(\Vc_\Hc, w) = \Delta_\Hc(X, \epsilon) = X)\), so the invariants hold 
+    before entering the loop.
+
+    Suppose the invariants were true before the current iteration of the loop and \(I\), \(J\), \(w\), and \(X\)
+    had the values \(I_n\), \(J_n\), \(w_n\) and \(X_n\), respectively. Furthermore, suppose the loop does not exit
+    after the current iteration. Because of this, then the algorithm must enter the 
+    if statement on line 8 (and not enter the if statement on line 12), so there is a word \(u\) such that \(\delta_\Gc(I_n, u) \neq 0\)
+    and \(\delta_\Hc(J_n, u) = 0\). We can see that \(w = w_n u\), \(I = \delta_\Gc(I_n, u)\), and 
+    \(X = \Delta_\Hc(X_n, u)\) at the end of the current iteration, so from this, we can see 
+    \[\delta_\Gc(I_0, w) = \delta_\Gc(I_0, w_n u) = \delta_\Gc(\delta_\Gc(I_0, w_n), u) = \delta_\Gc(I_n, u) = I\]
+    and similarly,
+    \[\Delta_\Hc(\Vc_\Hc, w) = \Delta_\Hc(\Vc_\Hc, w_n u) = \Delta_\Hc(\Delta_\Hc(\Vc_\Hc, w_n), u) = \Delta_\Hc(X_n, u) = X.\]
+    Therefore, all the invariants hold before the next iteration of the loop.
+    Finally, note that as \(\delta_\Hc(J_n, u) = 0\) and \(J_n \in X\), \(|X|\) is strictly less 
+    than \(|X|\). This guarantees the loop terminates as if the exit condition is never 
+    true, then \(|X| = 0\) will be true for some iteration so \(X = \varnothing\) and the algorithm exits on line 13. 
+
+    Now, we will show the correctness of the algorithm. Suppose algorithm returns false. Then \(X = \varnothing\) so 
+    from the invariants, \(\delta_\Gc(I_0, w) = I \neq 0\) so 
+    \(w \in \Bc(\shift{\Gc})\) and \(\Delta_\Hc(\Vc_\Hc, w) = \varnothing\) so \(w \notin \Bc(\shift{\Hc})\).
+    Therefore, \(\shift{\Gc} \nsubseteq \shift{\Hc}\). 
+
+    Conversely, suppose \(\shift{\Gc} \nsubseteq \shift{\Hc}\). That is, there is a word \(w \in \Bc(\shift{\Gc})\)
+    but \(w \notin \Bc(\shift{\Hc})\). As \(w \in \Bc(\shift{\Gc})\), then \(\delta_\Gc(I^*, w) \neq 0\)
+    for some vertex \(I^*\) in \(\Gc\). As \(w \notin \Bc(\shift{\Hc})\), then 
+    \(\delta_\Hc(J, w) = 0\) for all vertices \(J\) in \(\Hc\). As the algorithm will eventually have 
+    \(I\) take the value of \(I^*\) on line 7, we can see that \(w\) satisfies the conditions 
+    for a word \(u\) such that \(\delta_\Gc(I, u) \neq 0\) and \(\delta_\Hc(J, u) = 0\), so 
+    the algorithm enters the if statement on line 8. We can 
+    see the value of \(X\) is updated to \(\varnothing\) as \(\delta_\Hc(J, u) = 0\) for all vertices
+    \(J\) in \(\Hc\), so the algorithm returns false.
+
+    
+
+    % We first need to show that that loop invariants 
+    % \begin{enumerate}[(i)]
+    %     \item \(\delta_\Gc(I_0, w) = I\)
+    %     \item \(I \neq 0\)
+    %     \item \(\Delta_\Hc(\Vc_\Hc, w) = X\)
+    % \end{enumerate}
+    % hold at the beginning of each iteration of the loop on lines 8-19, where \(I_0\) is the 
+    % value of \(I\) before entering the loop. 
+
+    % Initially, 
+    % \(w = \epsilon\) and \(I = I_0\) so \(\delta_\Gc(I_0, w) = I\) and therefore (i) holds. 
+    % We have \(I_0 \in \Vc_\Gc\) so \(I_0 \neq 0\) and thus (ii) holds. Finally, as \(X = \Vc_\Hc\) then \(\Delta_\Hc(\Vc_\Hc, w) = X\) so (iii) holds.
+    % Suppose the loop invariant is true and \(w_n\), \(I_n\), \(J_n\), and
+    % \(X_n\) are the values of \(w\), \(I\), \(J\), and \(X\) at the beginning of the loop when the invariant is true. 
+    % If the loop continues onto the next iteration, then there is a path \(\pi\) in \(\Gc * \Hc^0\) that 
+    % starts at \((I_n, J_n)\) and ends at \((K, 0)\) for some \(K \in \Vc_\Hc\). This 
+    % means that \(\delta_\Gc(I_n, \Lc(\pi)) = K\) so \(I = K\). We know that \(w = w\Lc(\pi)\), so therefore 
+    % \(\delta_\Gc(I_0, w) = \delta_\Gc(I_0, w_n\Lc(\pi)) = \delta_\Gc(\delta_\Gc(I_0, w_n), \Lc(\pi))\)
+\end{proof}
+
 
 % \begin{theorem}
 %     \(\shift{\GtH} = \shift{\Hc}\) iff there is a function \(g : \Vc_\Gc \to \mathcal{P}(\Vc_\Hc)\) such that 
@@ -914,6 +1113,7 @@ Give reduction from irreducible shift to minimality, conclude minimality is GI-h
     \end{align*}
     
 \end{proof}
-    
+
+
 
 \end{document}

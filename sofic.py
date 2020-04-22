@@ -384,10 +384,11 @@ def is_subshift(G, H):
     GH = label_product(G, Hk)
     paths = nx.shortest_path(GH)
 
-    for (I, J) in product(G, H):
+    for I in G:
         X = list(H)
         w = ""
         while True:
+            J = first(X)
             path_exists = False
             for A in G:
                 if (A, "K") in paths[I, J]:
@@ -399,16 +400,34 @@ def is_subshift(G, H):
                     I = transition(G, I, wp)
                     X = transition_subset(H, X, wp)
                     w += wp
+                    if len(X) == 0:
+                        # w in language of G but not in language of H
+                        return w  
                     break
 
             if not path_exists:
                 break
 
-            if len(X) == 0:
-                # w in language of G but not in language of H
-                return w  
-            else:
-                # update J to be some element from X
-                J = first(X)
-
     return True
+
+def sigma_star(sigma=["0", "1"]):
+    c = 1
+    while True:
+        for s in product(sigma, repeat=c):
+            yield "".join(s)
+        c += 1
+
+def enumerate_language(G):
+    for w in sigma_star():
+        if transition_subset(G, G, w):
+            yield w
+
+def enumerate_complement(G):
+    for w in sigma_star():
+        if not transition_subset(G, G, w):
+            yield w
+
+def take(x, n):
+    return [i for i, _ in zip(x, range(n))]
+
+# def minimize_automata(G, q0, F):  
