@@ -384,9 +384,10 @@ def is_subshift(G, H):
     GH = label_product(G, Hk)
     paths = nx.shortest_path(GH)
 
-    for I in G:
+    for I0 in G:
         X = list(H)
         w = ""
+        I = I0
         while True:
             J = first(X)
             path_exists = False
@@ -402,6 +403,7 @@ def is_subshift(G, H):
                     w += wp
                     if len(X) == 0:
                         # w in language of G but not in language of H
+                        print(I)
                         return w  
                     break
 

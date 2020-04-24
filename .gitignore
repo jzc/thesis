@@ -1,3 +1,7 @@
 *.synctex.gz
 *.bcf
 *.run.xml
+graphs
+__pycache__
+.ipynb_checkpoints
+playground.ipynb
