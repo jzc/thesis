@@ -433,3 +433,5 @@ def take(x, n):
     return [i for i, _ in zip(x, range(n))]
 
 # def minimize_automata(G, q0, F):  
+def test():
+    print("hi")
