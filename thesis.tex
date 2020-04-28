@@ -1,4 +1,4 @@
-\documentclass[hidelinks]{article}
+\documentclass[hidelinks]{report}
 \usepackage{amsmath, amssymb, amsthm}
 \usepackage{thmtools}
 \usepackage{algorithm}
@@ -8,6 +8,7 @@
 \usepackage[shortlabels]{enumitem}
 \usepackage{todonotes}
 \usepackage{enumitem}
+\usepackage{subcaption}
 
 \usepackage[
 backend=biber,
@@ -15,9 +16,6 @@ style=alphabetic,
 sorting=ynt
 ]{biblatex}
 \addbibresource{refs.bib}
-
-% \usepackage[left=2.2in, right=1.25in, marginparwidth=1.7in]{geometry}
-% \reversemarginpar
 
 \setenumerate{itemsep=-.5ex}
 
@@ -30,20 +28,15 @@ sorting=ynt
 \newcommand{\Vc}{\mathcal{V}}
 \newcommand{\Ec}{\mathcal{E}}
 \newcommand{\Bc}{\mathcal{B}}
-\newcommand{\Kc}{\mathcal{K}}
 \newcommand{\Fc}{\mathcal{F}}
-\newcommand{\Fs}{\mathsf{F}}
 \newcommand{\GtH}{{\Gc^\to\Hc}}
 \newcommand{\shift}[1]{\mathsf{X}_{#1}}
 \newcommand{\term}[1]{\textit{#1}}
-\newcommand{\Sync}{\textsf{Sync}}
-\newcommand{\GI}{\textsf{GI}}
-\newcommand{\LGI}{\textsf{LGI}}
 
 \usepackage[bitstream-charter, cal=cmcal]{mathdesign}
 
 \theoremstyle{definition}
-\declaretheorem[numberwithin=section]{theorem}
+\declaretheorem[numberwithin=chapter]{theorem}
 \declaretheorem[sibling=theorem]{lemma}
 \declaretheorem[sibling=theorem]{example}
 \declaretheorem[sibling=theorem]{proposition}
@@ -58,47 +51,144 @@ sorting=ynt
 
 \begin{document}
 
-\maketitle
+\begin{titlepage}
+    \raggedright
+    \vspace*{3cm}
+    {\fontsize{30}{100}\selectfont 
+    \textbf{Towards algorithms for reducible presentations of sofic shifts}}
+
+    \vspace{.75cm}
+    \LARGE by Justin Cai
+
+    \vspace{.75cm}
+    \Large April 2020
+
+    \vspace{4cm}
+    \normalsize \textit{A thesis submitted in partial fullfillment of
+    the requirements for the degree of Bachelor of Science in the Deparment of Computer Science \\
+    at the University of Colorado Boulder  }
+\end{titlepage}
 
 \begin{abstract}
-    Given an irreducible presentation of a sofic shift, it is well known that the 
-    shift it presents is irreducible and that there is a 
-    procedure that yields the unique vertex-minimal presentation for
-    this shift in polynomial time. However, if one was given a reducible presentation,
-    the previous procedure does not necessarily yield the vertex-minimal presentation.
+    \thispagestyle{plain}
+    \pagenumbering{roman}
+    Given an irreducible presentation of a sofic shift, it is well known 
+    that there is a procedure that yields a presentation with the fewest
+    vertices among all presentations of the shift in polynomial time. However, 
+    given a reducible presentation,
+    the previous procedure does not necessarily yield such a minimal presentation.
     If the reducible presentation presents an irreducible shift, 
-    then the minimal presentation sits inside the reducible presentation 
-    so one could minimize these by these presentations by finding the 
-    minimal component within the presentation. However, this process 
-    would futile without knowing in advance if the shift it presents 
-    irreducible or not, so an algorithm for testing that is desirable. 
-    In this thesis, we present progress towards this problem.
+    then an irreducible presentation that presents the whole shift itself
+    can be found within this presentation,
+    so one could minimize these by these presentations by finding this 
+    component within the presentation. However, without knowing in advance
+    if presentation presented an irreducible shift or not, this procedure
+    would not work, so an algorithm for testing that is desirable. 
+    In this thesis, we present progress towards such an algorithm.
 \end{abstract}
 
-\section{Introduction}
+\renewcommand{\abstractname}{Acknowledgements}
+\begin{abstract}
+    \setcounter{page}{2}
+    \thispagestyle{plain}
+Raf, if I didn't take your theory of computation course, I probably would've 
+never gotten to the the level of appreciation and joy for mathematics and 
+theoretical computer science I have now (or at least taken a lot longer),
+so thank you for your class, introducing me to 
+symbolic dynamics, being willing to advise me, and being a great advisor overall.
+
+\vspace{.5cm}\noindent Jem and Josh, thank you for volunteering your time to be on my committee.
+It is much appreciated!
+
+\vspace{.5cm}\noindent STARBURTS\footnote{
+\textbf{S}uper 
+\textbf{T}errific 
+\textbf{A}wesome 
+\textbf{R}adical 
+\textbf{B}rilliant 
+\textbf{U}rban 
+\textbf{R}eally 
+\textbf{S}emantic 
+\textbf{T}echnical 
+\textbf{S}uperstars}, thanks for being 
+a great bunch of friends this semester (and for listening to me talk about theory 
+of computation for three hours).
+\end{abstract}
+
+\setcounter{page}{3}
+\tableofcontents
+
+\chapter{Introduction}
+
+\pagenumbering{arabic}
+
 
 In an effort to to sharpen the dividing 
 line between classical differential analysis and abstract symbolic analysis
 used frequently in the study of recurrence and transitivity in dynamical systems, 
 and Morse and Hedlund named the field of symbolic dynamics in their eponymous 
-1938 paper \cite{morse1938symbolic}. Shift spaces, the main object 
+1938 paper \cite{morse1938symbolic}. Shift spaces (or simply shifts), the main object 
 of study in symbolic dynamics, are sets unending sequences over a finite set of 
-symbols in which certain forbidden finite sequences are not allowed to appear 
-in the unending sequences. If a shift space has a finite set of 
+symbols in which certain forbidden finite sequences (know as forbidden words)
+are not allowed to appear in the unending sequences. If a shift space has a finite set of 
 forbidden words that describe it, then the shift space is known as a shift 
 of finite type (SFT). In addition to being characterized by a 
 finite list of forbidden words, SFTs also have a representation in a graphical 
 form, in the sense that all the unending sequences of SFTs can be 
 described by reading off the vertices in an infinite walk around a graph.
+Sofic shifts were introduced by \cite{weiss1973subshifts} as the smallest 
+class of shift spaces containing every SFT and which were closed under 
+factor codes. However, it was clear that sofic 
+shifts were exactly the shifts described by infinite walks around 
+a labeled graph.\footnote{The word sofic is derived from the Hebrew word 
+for finite \cite{lind1995introduction}, which an apt name as sofic shifts 
+generalize shifts of \textit{finite} type while still having a finite 
+representation though a labeled graph. Additionally, a shift space is sofic 
+iff it has a finite number of follower sets, which is closely related 
+to the Myhill-Nerode theorem from automata theory.}
+
+The labeled graphs that described sofic shifts, referred to hereafter as presentations
+of a sofic shift, are not unique, in the sense that many different presentations 
+can present the same sofic shift. Fischer \cite{fischer1975sofic} was interested in 
+irreducible sofic shifts (what he called transitive), and shows that such sofic shifts admit 
+a unique minimal deterministic presentation (with respect to number of vertices in the presentation).
+\cite{jonoska1994minimal} further characterized these minimal presentations.
+Sofic shifts that are reducible (i.e. not irreducible) do not 
+necessarily admit a unique minimal presentation, which can be seen in \cite{jonoska1996sofic},  
+where two presentations of a SFT were given that had the smallest number of 
+vertices among all presentation of the SFT, but the presentations were distinct.
+In the same paper, Jonoska characterized sofic shifts that had
+synchronizing deterministic presentations in terms of the syntactic monoid 
+of the language of the shift, and showed that any sofic shift having 
+a synchronizing deterministic presentation necessarily had a unique 
+minimal one.
+
+The algorithms that exist for minimizing presentations of sofic shift 
+seem to only be a well-known procedure that is essentially 
+based on DFA minimization \cite{hopcroft2001introduction,lind1995introduction}. 
+However, this algorithm is only guaranteed to yield the minimal presentation when 
+given an irreducible presentation (where irreducibility of a presentation is a property
+of the presentation being ``connected'').
+Irreducible presentations present irreducible shifts, but reducible presentations do not 
+necessarily present reducible shifts (i.e. a reducible presentation can present 
+an irreducible shift). It 
+has been essentially noted in \cite{jonoska1996sofic,marcus1991bounds,jonoska1994minimal} 
+that presentations that present irreducible sofic shifts contain an irreducible subgraph 
+which present the whole shift itself. Therefore, if you you 
+knew that a presentation presented an irreducible shift, a procedure
+to yield the minimal presentation would be to select the irreducible subgraph 
+that presents the shift, and then further minimizing that (if necessary). However, 
+an algorithm for deciding whether any presentation presents an irreducible shift 
+seems to be mentioned nowhere in the literature. In this thesis, we work towards such an algorithm.
 
 
-\section{Preliminaries}
+\chapter{Preliminaries}
 
 In this section we introduce basic concepts from symbolic dynamics. 
 Definitions and notation follow \cite{lind1995introduction} closely.
 
 \begin{definition}
-    Let \(\Ac\) be a finite set. The \term{full \(\Ac\)-shift} is th e set \(\Ac^\mathbb{Z}\) of all 
+    Let \(\Ac\) be a finite set. The \term{full \(\Ac\)-shift} is the set \(\Ac^\mathbb{Z}\) of all 
     bi-infinite sequences over \(\Ac\) (i.e. functions from \(\mathbb{Z}\) to \(\Ac\), hence the 
     usual notation for the set of all functions from \(\mathbb{Z}\) to \(\Ac\)).
     Elements in \(\Ac^\mathbb{Z}\) are called \term{points}.
@@ -114,28 +204,31 @@ Let \(x=(x_i)_{i \in \mathbb{Z}}\) be a bi-infinite sequence. For \(i \leq j\), 
     A \term{shift space} (or simply \term{shift}) is a subset \(\shift{\Fc}\)
     of some full shift \(\Ac^\mathbb{Z}\) such that none of the forbidden words appear in any point of the shift space.
     That is,
-    \[\shift{\Fc} \triangleq \big\{ \; (x_i)_{i \in \mathbb{Z}} \in \Ac^\mathbb{Z} \; : \; \forall i, j \in \mathbb{Z}, i\leq j \quad  x_{[i,j]} \notin \Fc \; \big\}.\]
+    \[\shift{\Fc} \triangleq \big\{ \; (x_i)_{i \in \mathbb{Z}} \in \Ac^\mathbb{Z} \; : \; \forall i, j \in \mathbb{Z}, i < j \quad  x_{[i,j]} \notin \Fc \; \big\}.\]
 \end{definition}
 
 If \(X\) and \(Y\) are shift spaces and \(X \subseteq Y\), then we say \(X\) is a \term{subshift} of \(Y\).
 We can see that \(\Ac^\mathbb{Z}\) is a shift space by taking \(\Fc = \varnothing\), so as 
-every shift space is a subset of a full shift, shift spaces are sometimes synonymously referred to 
+every shift space is a subset of a full shift, so shift spaces are sometimes synonymously referred to 
 as subshifts.
 
 \begin{definition}
     Let \(X\) be a shift space. The \term{language of \(X\)} is the set 
     \[\Bc(X) = \{ x_{[i,j]} : x \in X, i, j \in \mathbb{Z}, i < j\}\]
-    of non-empty words that appear in some point in \(X\).
+    of nonempty words that appear in some point in \(X\).
 \end{definition}
 
 Instead of specifying what words are forbidden in a shift space, we can characterize 
-shift spaces by their languages. If \(L \subseteq \Ac^+\) is a set of non-empty words, then 
-we say \(L\) is \term{factorial} if for every word \(w \in L\), then every non-empty subword 
+shift spaces by their languages. If \(L \subseteq \Ac^+\)\footnote{
+    \(\Ac^*\) denotes the set of all words over \(\Ac\) including \(\epsilon\);
+    \(\Ac^+\) is \(\Ac^*\) without \(\epsilon\).
+} is a set of nonempty words, then 
+we say \(L\) is \term{factorial} if for every word \(w \in L\), then every nonempty subword 
 is in \(L\). We say \(L\) is \term{prolongable} if there for every word \(w \in L\), 
-there are non-empty words \(u, v \in L\) such that \(uwv \in L\).
+there are nonempty words \(u, v \in L\) such that \(uwv \in L\).
 
 \begin{theorem}[name=\cite{lind1995introduction}]
-    If \(L \subseteq \Ac^+\) is a set of non-empty words, then \(L = \Bc(X)\) for some 
+    If \(L \subseteq \Ac^+\) is a set of nonempty words, then \(L = \Bc(X)\) for some 
     shift space \(X\) if and only if \(L\) is factorial and prolongable. 
     Furthermore, for any shift space, \(X = \shift{\Ac^+\backslash\Bc(X)}\), so 
     two shift spaces are equal if and only if their languages are equal.
@@ -177,12 +270,16 @@ most likely well known, but no reference was found for it, so we provide a proof
     Another shift space is the \term{\(010\)-shift}, which are 
     the bi-infinite sequences over \(\{0, 1\}\) such that \(1\) only appears at most once. 
     We can describe the shift using the forbidden blocks \(\{10^k1 : k \geq 0\}\). This 
-    shift space is reducible, as \(1\) is in the language, but every word joining 
-    \(1\) and \(1\) contains a forbidden word, so there is no word joining \(1\) and \(1\).
+    shift space is reducible, as \(1\) is in the language, but if there 
+    were a word joining \(1\) and \(1\), the the the resulting 
+    word would contain a forbidden word, so there can be no word joining \(1\) and \(1\).
 \end{example}
 
 \begin{definition}
-    A \term{graph} \(G\) is a \(4\)-tuple \(G = (\Vc, \Ec, i, t)\), where \(\Vc\) is a finite 
+    A \term{graph}\footnote{
+        In our discussion, a graph really means a directed multigraph; there 
+        can be multiple edges between the same two vertices.
+    } \(G\) is a \(4\)-tuple \(G = (\Vc, \Ec, i, t)\), where \(\Vc\) is a finite 
     set of \term{vertices}, \(\Ec\) is a finite set of \term{edges}, and \(i : \Ec \to \Vc\) and 
     \(t : \Ec \to \Vc\) are functions assigning an \term{initial} and \term{terminating} vertex for 
     each edge, respectivley. For an arbitrary graph \(G\), let 
@@ -204,7 +301,7 @@ most likely well known, but no reference was found for it, so we provide a proof
     If \(G\) is a graph, then \(\shift{G}\) is a shift space.
 \end{theorem}
 
-Let \(G\) be a graph. A \term{path in \(G\)} is a non-empty finite sequence of edges \(\pi = e_1 \dots e_n\) such that \(t(e_i) = i(e_{i+1})\) for all \(i < n\).
+Let \(G\) be a graph. A \term{path in \(G\)} is a nonempty finite sequence of edges \(\pi = e_1 \dots e_n\) such that \(t(e_i) = i(e_{i+1})\) for all \(i < n\).
 If \(I\) is a vertex in \(G\), we say a path \term{starts at \(I\)} if \(i(e_1) = I\). Similarly, 
 we say a path \term{ends at \(I\)} if \(t(e_n) = I\).
 
@@ -238,9 +335,6 @@ if \(G\) is reducible.
     initial and terminating vertex functions of the underlying graph. Additionally,
     let \(\Lc_\Gc\) denote the labeling function and \(\Ac_\Gc\) denote the set 
     of labels appearing in \(\Gc\) (i.e. the image of \(\Lc_\Gc\)).
-
-    % A labeled graph is \term{deterministic} if for each vertex, the labels of the outgoing edges at that vertex are all distinct 
-    % (i.e. \(\Lc|_{i^{-1}(I)}\) is injective for all \(I \in \Vc\)).
 \end{definition}
 
 If \(\Gc\) is a labeled graph, then we will let \(\Gc\) inherit properties of its underlying 
@@ -276,19 +370,91 @@ not necessarily a word in \(\Bc(\shift{\Gc})\), unless \(\Gc\) is essential.
 \begin{example}
     The even shift and \(010\)-shift are both examples of sofic shifts, as we 
     can describe their points as bi-infinite walks on labeled graphs. The even 
-    shift is presented by (a) in ?? and the \(010\)-shift is presenting by (b) in ??.
+    shift is presented by \Cref{evenshift} and the \(010\)-shift is presented by \Cref{010shift}.
+    As the underlying graph of \Cref{evenshift} is irreducible, the even shift 
+    itself is irreducible.
 \end{example}
 
-\begin{definition}
-    Let \(\Gc = (G, \Lc)\) be a labeled graph. For a vertex \(I \in \Vc_\Gc\), the 
-    \term{follower set of \(I\)} is the set 
-    \[F(I) \triangleq \big\{ \; \Lc(\pi) : \pi \in \Bc(\shift{G}), i(\pi) = I \; \big\}.\]
-    For a word \(w \in \Bc(\shift{\Gc})\), the \term{follower set of \(w\)}
-    is the set 
-    \[F(w) \triangleq \big\{ \; u \in \Bc(\shift{\Gc}) : wu \in \Bc(\shift{\Gc}) \; \big\}.\]
-\end{definition}
+\begin{figure}
+    \centering
+    \begin{subfigure}{0.31\textwidth}
+        \begin{tikzpicture}
+            [vertex/.style={circle, fill=black, inner sep=1pt},
+             shorten <=1pt, shorten >= 1pt, >={Stealth[]}]
+             
 
-% \begin{definition}
+            \node[vertex] (A) at (0,0) {};
+            \node[vertex] (B) at (2,0) {};
+    
+            \path [->] (A) edge[out=225, in=135, distance=10mm] node[left] {$1$} (A);
+            \path [->] (A) edge[out=45, in=135] node[above] {$0$} (B);
+            \path [->] (B) edge[out=225, in=-45] node[below] {$0$} (A);
+        \end{tikzpicture} 
+        \caption{}\label{evenshift}
+    \end{subfigure}
+    \begin{subfigure}{0.31\textwidth}
+        \begin{tikzpicture}
+            [vertex/.style={circle, fill=black, inner sep=1pt},
+             shorten <=1pt, shorten >= 1pt, >={Stealth[]}]
+            \node[vertex] (A) at (0,0) {};
+            \node[vertex] (B) at (2,0) {};
+    
+            \path [->] (A) edge[out=225, in=135, distance=10mm] node[left] {$0$} (A);
+            \path [->] (A) edge node[above] {$1$} (B);
+            \path [->] (B) edge[out=-45, in=45, distance=10mm] node[right] {$0$} (B);
+        \end{tikzpicture} 
+        \caption{}\label{010shift}
+    \end{subfigure}
+
+    \begin{subfigure}{0.31\textwidth}
+        \begin{tikzpicture}
+            [vertex/.style={circle, fill=black, inner sep=1pt},
+             shorten <=1pt, shorten >= 1pt, >={Stealth[]}]
+            \node[vertex] (A) at (0,0) {};
+            \node[vertex] (B) at (2,0) {};
+            \node[vertex] (C) at (2,2) {};
+            \node[vertex] (D) at (0,2) {};
+    
+            \path [->] (A) edge[out=180, in=270, distance=10mm] node[left] {$1$} (A);
+            \path [->] (C) edge[out=0, in=90, distance=10mm] node[right] {$1$} (C);
+            \path [->] (A) edge node[below] {$0$} (B);
+            \path [->] (B) edge node[right] {$0$} (C);
+            \path [->] (C) edge node[above] {$0$} (D);
+            \path [->] (D) edge node[left] {$0$} (A);
+
+            % \draw[draw=none, use as bounding box] (0, 0) rectangle (3, -1);
+        \end{tikzpicture} 
+        \caption{}\label{nonminimaleven}
+    \end{subfigure}
+    \begin{subfigure}{0.31\textwidth}
+        \begin{tikzpicture}
+            [vertex/.style={circle, fill=black, inner sep=1pt},
+             shorten <=1pt, shorten >= 1pt, >={Stealth[]}]
+            \node[vertex] (A) at (0,0) {};
+            \node[vertex] (C) at (2,.75) {};
+            \node[vertex] (B) at (2,-.75) {};
+    
+            \path [->] (A) edge[out=225, in=135, distance=10mm] node[left] {$1$} (A);
+            \path [->] (A) edge[out=-40, in=180] node[below] {$1$} (B);
+            \path [->] (B) edge[out=45, in=-45] node[right] {$0$} (C);
+            \path [->] (C) edge[out=225, in=135] node[left] {$0$} (B);
+            \path [->] (C) edge[out=180, in=40] node[above] {$0$} (A);
+
+            % \draw[draw=none, use as bounding box] (0, 0) rectangle (3, -1);
+        \end{tikzpicture} 
+        \caption{}\label{nondeterministiceven}
+    \end{subfigure}
+    \caption{Presentations of sofic shifts.}
+\end{figure}
+
+\begin{definition}
+    Let \(\Gc = (G, \Lc)\) be a presentation of a sofic shift \(X\). For a vertex \(I \in \Vc_\Gc\), the 
+    \term{follower set of \(I\)} is the set 
+    \[F_\Gc(I) \triangleq \big\{ \; \Lc(\pi) : \pi \in \Bc(\shift{G}), i(\pi) = I \; \big\}.\]
+    For a word \(w \in X\), the \term{follower set of \(w\)}
+    is the set 
+    \[F_X(w) \triangleq \big\{ \; u \in \Bc(X) : wu \in \Bc(X) \; \big\}.\]
+\end{definition}
 
 Let \(G\) and \(H\) be graphs. A \term{graph isomorphism between \(G\) and \(H\)}
 is a pair of bijective functions \(\partial\Phi : \Vc_G \to \Vc_H\) and \(\Phi : \Ec_G \to \Ec_H\)
@@ -301,37 +467,90 @@ and \(\Hc\) such that
 \(\Lc_\Hc(\Phi(e)) = \Lc_\Gc(e)\) for all \(e \in \Ec_\Gc\). We say 
 \(\Gc\) and \(\Hc\) are \term{isomorphic} if there is an isomorphism between them.
 
-\begin{theorem}[name=\cite{lind1995introduction} Fundamental theorem of minimal deterministic presentations of irreducible sofic shifts]
+A \term{minimal presentation} of a sofic shift \(X\) is a presentation 
+of \(X\) with the smallest number of vertices among all presentations of \(X\). 
+% Let \(\Gc\) be a presentation of a sofic shift. 
+We say a presentation is \term{deterministic} if for each vertex in the presentation,
+no two distinct edges starting at that vertex share the same label (i.e. the edges 
+starting at that vertex are labeled uniquely). A presentation 
+is \term{follower-separated} no pair of distinct vertices have the same follower 
+sets (i.e. all the follower sets of the presentation are distinct). 
+
+Every sofic shift has a deterministic presentation, which borrows the idea of the
+\term{subset construction} from automata theory \cite{hopcroft2001introduction}.
+In fact, \cite{jonoska1996sofic} showed that the minimal \term{deterministic finite 
+automata} (DFA) accepting the 
+language of a sofic shift has the minimal presentation for the 
+sofic shift as a subgraph of the DFA. 
+
+Additionally, every sofic shift has a follower-separated presentation. 
+Any presentation can be made into a follower-separated by creating 
+a graph from the equivalence class of follower sets (i.e. two vertices 
+in a presentation are equivalent if they have the same follower set), 
+and connecting any two equivalence classes if they have an edge 
+between any of the vertices between the equivalence classes \cite{lind1995introduction}.
+We call this process \term{follower-separation}.
+
+\begin{example}
+    As the vertex in the upper right of \Cref{nondeterministiceven} 
+    is a vertex that has two edges starting at it labeled \(1\),
+    this presentation is nondeterministic, but still presents 
+    the even shift.
+\end{example}
+
+\begin{theorem}[name=\cite{lind1995introduction} Fundamental theorem of minimal deterministic presentations of irreducible sofic shifts]\label{fundamental}
     Let \(X\) be an irreducible sofic shift.
     \begin{enumerate}[(i)]
         \item Any minimal deterministic presentation of \(X\) is follower-separated and irreducible.
         \item Any two irreducible deterministic presentations of \(X\) 
         that are also follower-\\separated are isomorphic.
         \item Therefore, any two minimal deterministic presentations of \(X\) are isomorphic.
-        \item Additionaly, a deterministic presentation, up to isomorphism, is the minimal deterministic presentation of \(X\)
+        \item Additionaly, a deterministic presentation, up to isomorphism, is the unqiue minimal deterministic presentation of \(X\)
         if and only if it is irreducible and follower-separated.
     \end{enumerate}
 \end{theorem}
 
+The idea of follower-separation once again borrows ideas from automata theory,
+ as minimization of DFAs is done by creating a DFA from the equivalence class of states 
+(defined in a similar manner). However, DFA minimization given the minimal 
+DFA no matter what, but follower-separation does not necessarily yield a minimal 
+presentation. It is only guaranteed to give the mininmal presentation if the 
+original presentation is irreducible (\cite{lind1995introduction} Lemma 3.3.8).
+
+\begin{example}
+    The presentation in \Cref{nonminimaleven} is an irreducible presentation 
+    of the even shift but is not follower-separated, so by \Cref{fundamental},
+    it is not minmal. The presentation \Cref{evenshift} is an irreducible 
+    follower-separated presentation of the even shift, so by \Cref{fundamental},
+    it is minimal.
+\end{example}
+
 \begin{definition}
-    Let \(\Gc = (G, \Lc)\) be a labeled graph, \(I\) be some vertex in \(\Gc\), and \(w \in B(\shift{\Gc})\).
+    Let \(\Gc\) be a presentation of a sofic shift \(X\), \(I\) be some vertex in \(\Gc\), and \(w \in \Bc(X)\).
     If every path \(\pi\) in \(\Gc\) that presents \(w\) ends at \(I\), then we say \term{\(w\) synchronizes to \(I\)}.
     We say that \(w\) is \term{synchronizing for \(\Gc\)} if it synchronizes to some vertex in \(\Gc\). 
     If there is a word that synchronizes to \(I\), then we say that the vertex \term{\(I\) is synchronizing}.
     Finally, we denote 
-    \(S(\Gc)\) as the set of all syncrhonizing words for \(\Gc\).
+    \(S(\Gc)\) as the set of all synchronizing words for \(\Gc\).
 \end{definition}
 
-\section{Irreducibility}
+% We wrap up the preliminaries with relatively intuitive properties of follower 
+% sets and synchronizing words.
+
+% \begin{proposition}
+%     Let \(\Gc\) be a a presentation of a sofic shift \(X\).
+% \end{proposition}
+
+\chapter{Irreducibility}
 
 Consider the presentation in \Cref{reducibleevenshift}.
 The shift presented by subgraph induced by \(I\) and \(J\) is the even shift, and every 
 word presented by a path starting from \(K\) is presented by some path starting at 
-\(I\) and \(J\). Hence, this graph presents the even shift. Additionly, it is 
+\(I\) and \(J\). Hence, this presentation presents the even shift. Additionly, it is 
 also follower-separated as \(01 \in F(K)\backslash F(I)\), \(1 \in F(K)\backslash F(J)\),
 and \(1 \in F(I) \backslash F(J)\). 
-When do follower-separated reducible graphs present irreducible shifts? We will first look 
-at a simple class of reducible graphs.
+When do follower-separated reducible presentations present irreducible shifts? We will first look 
+at a simple class of reducible presentations.
 
 \begin{figure}[h]
     \centering
@@ -353,13 +572,20 @@ at a simple class of reducible graphs.
     \label{reducibleevenshift}
 \end{figure}
 
-Let \(\GtH\) be an essential, deterministic, follower-separated graph with two irreducible components
+Given a graph and vertices \(I\) and \(J\) in the graph, we say \(I\) \term{communicates} with \(J\) if and only if 
+\(I\) is reachable from \(J\) and \(J\) is reachable from \(I\). By saying 
+a vertex is always reachable from itself, it is routine to check that this defines 
+an equivalence relation. The equivalence classes are called \term{irreducible components},
+as the subgraphs induced by each class are irreducible.
+
+Let \term{\(\GtH\)} is an essential, deterministic, follower-separated presentation with two irreducible components
 that induce two subgraphs, namely \(\Gc\) and \(\Hc\), such that there is 
 exactly one edge starting in \(\Gc\) and ending in \(\Hc\). 
 Some properties of \(\GtH\) are that the vertices of \(\Gc\) and \(\Hc\)
 partition the vertices of \(\GtH\), both \(\Gc\) and \(\Hc\) are essential,  
 any vertex in \(\Hc\) is reachable from any vertex in \(\GtH\), and no vertex in \(\Gc\) 
-is reachable from any vertex in \(\Hc\).
+is reachable from any vertex in \(\Hc\). In this section, we will 
+prove some properties of \(\GtH\).
 
 \begin{figure}[h]
     \centering
@@ -374,11 +600,16 @@ is reachable from any vertex in \(\Hc\).
     \caption{Representation of \(\GtH\).}
 \end{figure}
 
+% \begin{example}
+%     The presentation in \Cref{reducibleevenshift} is \(\GtH\)-like, in the 
+%     sense that it is essential, determinisitc, and has two irreducible components with only one edge 
+%     between.  \(\Gc\) is the subgraph induced 
+%     by \(K\) and \(\Hc\) is the subgraph induced by \(I\) and \(J\).
+% \end{example}
+
 \begin{proposition}\label{extensionthm}
-    % \todo{Related to a comment below, but this is just a corollary of [Lind and Marcus 3.3.16]
-    % and the nature of \(\GtH\)}
     Every word \(u \in \Bc(\shift{\GtH})\) can be extended on the right to a 
-    word \(u w \in \Bc(\shift{\GtH})\) that syncrhonizes to a vertex \(I\) in \(\Hc\).
+    word \(u w \in \Bc(\shift{\GtH})\) that synchronizes to a vertex \(I\) in \(\Hc\).
 \end{proposition}
 
 \begin{proof}
@@ -408,12 +639,18 @@ is reachable from any vertex in \(\Hc\).
 
 \begin{proof}
     By \Cref{extensionthm}, we can extend \(u\) on the right to a word \(uw \in \Bc(\shift{\GtH})\)
-    so that any path presenting \(uw\) ends at some vertex \(I\) in \(\Hc\). Hence, for any word \(v \in F(uw)\), a 
-    path presenting \(uwv\) ends at some vertex in \(\Hc\), so \(F(uwv) \subseteq \Bc(\shift{\Hc})\)
-    \todo{Probably will expand this later. Argue that \(uwv\) is synchronizing, so \(F(uwv) = F(J)\)
-    for some vertex \(J\) in \(\Hc\), so \(F(uwv) = F(J) \subseteq \bigcup_{K \in \Vc_\Hc} F(K) = \Bc(\shift{\Hc})\)}. 
-    As \(u \notin \Bc(\shift{\Hc})\), we have \(u \notin F(uwv)\). Thus, there is no word in 
-    \(\Bc(\shift{\GtH})\) joining the word \(uw\) and \(u\), so \(\shift{\GtH} \) is reducible.
+    so that any path presenting \(uw\) synchronizes to a vertex \(I\) in \(\Hc\). 
+    We want to show that there is no word joining \(uw\) and \(u\). As \(uw\)
+    synchronizes to \(I\), then by \cite{lind1995introduction} Lemma 3.3.15, \(F(I) = F(uw)\). 
+    From the definition of irreducibility and follower sets of words, we 
+    can see \(v\) is a word joining \(uw\) and \(w\)
+    exactly when \(v \in F(uw)\) and \(u \in F(uwv)\).
+    For any word \(v \in F(I)\), there is some path labeled \(v\) starting 
+    at \(I\) and ending at \(J\) for some vertex \(J\) in \(\GtH\). Clearly,
+    \(J\) is a vertex in \(\Hc\) as no vertex in \(\Gc\) is reachable from \(I\), so 
+    \(F(J) \subseteq \Bc(\shift{\Hc})\).
+    But \(u \notin \Bc(\shift{\Hc})\), so \(u \notin F(uwv)\). Thus, there is no word joining
+    \(uw\) and \(u\), so \(\shift{\GtH}\) is reducible.
 \end{proof}
 
 \begin{theorem}\label{irreq}
@@ -461,17 +698,6 @@ is reachable from any vertex in \(\Hc\).
     If \(\shift{\GtH}\) is irreducible, then no vertex in \(\Gc\) is synchronizing for \(\GtH\).
 \end{corollary}
 
-% \begin{proof}
-%     Suppose there were a vertex \(I\) in \(\Gc\) that is synchronizing for \(\GtH\). 
-%     Let \(v\) be a word that synchronizes to \(I\) in \(\GtH\). By \Cref{hsync}, every vertex in \(\Hc\) 
-%     is synchronizing for \(\GtH\), so let \(J\) be some vertex in \(\Hc\) and \(u\) be a word that synchronizes to 
-%     \(J\) in \(\GtH\). As \(\shift{\GtH}\) is irreducible, there is a word \(w \in \Bc(\shift{\GtH})\) 
-%     such that \(uwv \in \Bc(\shift{\GtH})\). However, any path presenting \(uwv\) must first visit 
-%     \(J\) (as \(u\) is synchronizing) and then visit \(I\), implying that \(I\) is reachable 
-%     from \(J\). But this contradicts the structure of \(\GtH\), so no vertex in \(\Gc\) can be 
-%     synchronizing for \(\GtH\).
-% \end{proof}
-
 \begin{theorem}
     \(\shift{\GtH} = \shift{\Hc}\) if and only if \(S(\GtH) \subseteq S(\Hc)\).
 \end{theorem}
@@ -518,20 +744,20 @@ is reachable from any vertex in \(\Hc\).
 %     If \(\pi\) starts in \(\Hc\), then \(w \in \Bc(\shift{\Hc})\). Otherwise, \(\)
 % \end{proof}
 
-\section{Subshift testing}
+\chapter{Subshift testing}
 
 In the previous section, we posited that if \(\shift{\GtH}\) is irreducible, then \(\shift{\Gc}\) is a subshift of \(\shift{\Hc}\) (\Cref{irrsubshift}),
-Although this condition is not sufficient for irreducibility (for example, the presentation of the \(010\)-shift), algorithmically, we will show there is a 
+Although this condition is not sufficient for irreducibility (for example, \Cref{010shift}, the presentation of the \(010\)-shift), algorithmically, we will show there is a 
 polynomial-time algorithm for deciding this, which gives a direction in looking for 
 a characterization of irreducibility conditional on this subshift property.
 
-Let \(\Gc\) be a deterministic labeled graph and \(I\) be a vertex in \(\Gc\). 
+Let \(\Gc\) be a deterministic presentation and \(I\) be a vertex in \(\Gc\). 
 As every edge starting at \(I\) is labeled uniquely, we can see 
 that every path starting at \(I\) is also labeled uniquely. That is, to say, for paths 
 \(\pi\) and \(\tau\) both starting at \(I\), if \(\Lc(\pi) = \Lc(\tau)\), then \(\pi = \tau\). We can 
 define a partial \term{transition function} \(\delta_\Gc : \Vc_\Gc \times \Ac_\Gc^* \to \Vc_\Gc\) 
 with \(\delta_\Gc(I, w) \triangleq J\) if there is a path \(\pi\) labeled \(w\) starting 
-at \(I\) and ending at \(J\). However, if there is no path labeled \(w\) starting at \(I\),
+at \(I\) and ending at \(J\) and \(\delta_\Gc(I, \epsilon) = I\) for all \(I\). However, if there is no path labeled \(w\) starting at \(I\),
 then \(\delta_\Gc(I, w)\) is not defined, so in this case, we will say \(\delta_\Gc(I, w) \triangleq 0\),
 where \(0\) is a constant distinct from the vertices of \(\Gc\). Additionally, we 
 will define \(\delta_\Gc(0, w) = 0\). Finally, define 
@@ -539,7 +765,7 @@ the \term{subset transition function} \(\Delta_\Gc : \mathcal{P}(\Vc) \times \Ac
 with \(\Delta_\Gc(S, w) \triangleq \{ J \in \Vc_\Gc : J \neq 0 \text{ and } \delta_\Gc(I, w) = J \text{ for some } I \in S\}\).
 
 \begin{proposition}\label{deltaprops}
-    Let \(\Gc\) be a deterministic labeled graph, and \(I\) and \(J\) be verticies in \(\Gc\). The following properties of the 
+    Let \(\Gc\) be an essential, deterministic labeled graph, and \(I\) and \(J\) be verticies in \(\Gc\). The following properties of the 
     transition function are true:
 
     \begin{enumerate}[(i)]
@@ -555,11 +781,12 @@ with \(\Delta_\Gc(S, w) \triangleq \{ J \in \Vc_\Gc : J \neq 0 \text{ and } \del
     evidently from the defintion of \(\delta_\Gc\). Similarly, \(w \in \Bc(\shift{\Gc})\) exactly 
     when \(w \in F(I)\) for some vertex \(I\) in \(\Gc\), so (ii) follows from the definition of \(\Delta_\Gc\).
 
-    Let \(u, v \in \Ac_\Gc^*\). If \(\delta_\Gc(I, uv) \neq 0\), then there is a unique path \(\pi=e_1 \dots e_n\) 
+    For (iii), let \(u, v \in \Ac_\Gc^*\). If \(\delta_\Gc(I, uv) \neq 0\), then there is a unique path \(\pi=e_1 \dots e_n\) 
     labeled \(uv\) starting at \(I\) and ending at \(J\). As \(uv = \Lc(e_1) \dots \Lc(e_n)\), then for 
     nonempty \(v\), we can see that
     there is some \(i\) such that \(u = \Lc(e_1) \dots \Lc(e_i)\) and 
-    \(v = \Lc(e_{i+1}) \dots \Lc(e_n)\). Let \(\rho_1 = e_1 \dots e_i\) and \(\rho_2 = e_{i+1} \dots e_n\).
+    \(v = \Lc(e_{i+1}) \dots \Lc(e_n)\)
+    (for \(v = \epsilon\), what we are trying to show follows trivially). Let \(\rho_1 = e_1 \dots e_i\) and \(\rho_2 = e_{i+1} \dots e_n\).
     As \(\rho_1\) is a path starting at \(i(e_1)\) and ending at \(t(e_i)\) labeled \(u\),
     \(\delta_\Gc(I, u) = t(e_i)\). Similarly, as \(\rho_2\) is a path starting 
     at \(t(e_i)\) and ending at \(J\), \(\delta_\Gc(t(e_i), v) = J\). Therefore, 
@@ -573,7 +800,7 @@ with \(\Delta_\Gc(S, w) \triangleq \{ J \in \Vc_\Gc : J \neq 0 \text{ and } \del
     be no path labeled \(v\) starting at \(\delta_\Gc(I, u)\), as otherwise, 
     \(\delta_\Gc(\delta_\Gc(I, u), v) \neq 0\) and then 
     \(\delta_\Gc(\delta_\Gc(I, u), v) = \delta_\Gc(I, uv) \neq 0\). Therefore, \(\delta_\Gc(\delta_\Gc(I, u), v) = 0\),
-    which proves (iii). An argument similar to (iii)'s proof can be done for (iv).
+    which completes the proof for (iii). An similar argument to (iii)'s proof can be done applied to (iv).
 \end{proof}
 
 \begin{definition}
@@ -585,56 +812,33 @@ with \(\Delta_\Gc(S, w) \triangleq \{ J \in \Vc_\Gc : J \neq 0 \text{ and } \del
     edge from \(0\) to \(0\).
 \end{definition}
 
-From the definition of \(\Gc^0\) that \(w \in F(I)\) if and only if 
+From the definition of \(\Gc^0\), we can see that for 
+all vertices \(I\) in \(\Gc\), \(w \in F(I)\) if and only if 
 there is no path labeled \(w\) starting at \(I\) and ending at \(0\).
 
-% \begin{proposition}
-%     If \(\Gc\) be a deterministic, essential, labeled graph, then \(\Gc^0\) is deterministic 
-%     and for all vertices \(I\) in \(\Gc\),
-%     \(w \in F(I)\) if and only if there is no path in \(\Gc^0\) labeled \(w\) starting at \(I\)
-%     and ending at \(0\).
-% \end{proposition}
-
-% \begin{proof}
-%     An edge labeled \(a\) starting at \(I\) is added to \(\Gc^0\) only when there 
-%     is no edge labeled \(a\) starting at \(I\) in \(\Gc\), so clearly, the uniqueness 
-%     of the labels of the edges starting at \(I\) is preserved, and \(\Gc^0\) is deterministic.
-
-%     If \(w \in F(I)\), then there is a unique path \(\pi\) labeled \(w\) starting at \(I\) and ending 
-%     at some vertex \(J\) in \(\Gc\). Therefore, as \(\Gc\) is a subgraph of \(\Gc^0\),
-%     \(\pi\) is a path in \(\Gc^0\) labeled \(w\). As \(\Gc^0\) is deterministic, 
-%     \(\pi\) is also the unique path presenting \(w\) and as \(\pi\)
-%     ends at \(J \neq 0\), we can conclude there is no path in \(\Gc^0\) presenting \(w\)
-%     starting at \(I\) and ending at \(0\).
-
-%     Conversely, suppose \(w \notin F(I)\). If there were no path labeled \(w\)
-%     starting at \(I\) and ending at \(0\)
-% \end{proof}
-
 \begin{definition}
-    Let \(\Gc\) and \(\Hc\) be labeled graphs. The \term{label product of \(\Gc\) and \(\Hc\)}
+    Let \(\Gc\) and \(\Hc\) be labeled graphs. The \term{label product} of \(\Gc\) and \(\Hc\)
     is the labeled graph \(\Gc * \Hc\) such that if there is an edge \(e_1\) in \(\Gc\)
     between \(I_1\) and \(J_1\) and an edge \(e_2\) in \(\Hc\) between \(I_2\) and \(J_2\)
     with \(\Lc_\Gc(e_1) = \Lc_\Hc(e_2)\), then there is an edge in \(\Gc * \Hc\) between 
     \((I_1, I_2)\) and \((J_1, J_2)\) labeled \(\Lc_\Gc(e_1) = \Lc_\Hc(e_2)\).
 \end{definition}
 
-There is a path in \(\Gc\) labeled \(w\) starting at \(I_1\) and ending at \(J_1\)
-and a path in \(\Hc\) labeled \(w\) starting at \(I_2\) and ending at \(J_2\) 
-if and only if there is a path from \((I_1, J_1)\) to \((I_2, J_2)\) in \(\Gc*\Hc\).
+From the definition of \(\Gc * \Hc\), we can see that there is a word \(w\) and 
+paths \(\pi\) in \(\Gc\) and \(\tau\) in \(\Hc\) both labeled \(w\) with
+\(\pi\) starting at \(I_1\) and ending at \(J_1\) and \(\tau\) starting at \(I_2\)
+and ending at \(J_2\)
+if and only if there is a path in \(\Gc*\Hc\) starting at \((I_1, J_1)\) and 
+ending at \((I_2, J_2)\).
 
-\begin{theorem}
-    If there is a path in \(\Gc * \Hc\) labeled \(w\) starting at \((I, J)\), then 
-    there is a path in \(\Gc\) labeled \(w\) starting at \(I\) and a path in \(\Hc\)
-    labeled \(w\) starting at \(J\).
-\end{theorem}
-
-With definition of these two graph constructions, we can see that for a vertex 
+With these two graph constructions, we can see that essential graphs \(\Gc\) and 
+\(\Hc\) and for a vertex 
 \(I\) in \(\Gc\) and a vertex \(J\) in \(\Hc\), checking \(F(I) \subseteq F(J)\)
 reduces to checking the existence of a path in \(\Gc * \Hc^0\) from \((I, J)\) to 
-any vertex in the set \(\{(K, 0) : K \in \Vc_\Gc\}\). With this, \Cref{algsubshift}
-is introduced. The algorithm tests if an irreducible graph \(\Gc\) presents a subshift of the 
-shift \(\Hc\) presents is introduced. From a high 
+any vertex in the set \(\{(K, 0) : K \in \Vc_\Gc\}\). With this, we 
+can introduce \Cref{algsubshift}, which given an irreducible deterministic presentation \(\Gc\)
+and an essential deterministic presentation \(\Hc\), test whether \(\Gc\)
+presents a subshift of the shift \(\Hc\) presents. From a high 
 level, the algorithm takes a vertex in \(\Gc\) and a vertex in \(\Hc\) and 
 tries to find a word in the follower set of the vertex in \(\Gc\) but 
 not in the follower set of the vertex in \(\Hc\). If it finds this word, 
@@ -647,7 +851,7 @@ Otherwise, if it does not find this word, then every word in \(\Bc(\shift{\Gc})\
 \begin{algorithm}[H]
     \caption{Subshift testing}\label{algsubshift}
     \begin{algorithmic}[1]
-        \Require $\Gc$ and $\Hc$ are deterministic presentations, $\Gc$ is irreducible
+        \Require $\Gc$ is an irreducible and deterministic presentation, $\Hc$ is an essential and deterministic presentation
         \Procedure{is\_subshift}{$\Gc, \Hc$}
                 \State $I \gets$ any element in $\Vc_\Gc$
                 \State $X \gets \Vc_\Hc$
@@ -753,616 +957,93 @@ Otherwise, if it does not find this word, then every word in \(\Bc(\shift{\Gc})\
     \end{align*}
 \end{proof}
 
-\section{Discussion and future work}
-
-% \begin{theorem}\label{algsubshiftcorrectness}
-%     If \(\Gc\) and \(\Hc\) are essential, deterministic labeled graphs, 
-%     then \Cref{algsubshift} always terminates and returns true if and only if \(\shift{\Gc} \subseteq \shift{\Hc}\).
-% \end{theorem}
-    
-% \begin{proof}
-%     First, we need to show that for the loop on lines 8-19, if \(I_0\) is the 
-%     value of \(I\) before entering the loop, the invariants 
-%     \begin{enumerate}[(i)]
-%         \item \(\delta_\Gc(I_0, w) = I\)
-%         \item \(I \neq 0\)
-%         \item \(\Delta_\Hc(\Vc_\Hc, w) = X\)
-%     \end{enumerate}
-%     hold before the beginning of each iteration the loop. Additionally, we need to show that 
-%     the loop always terminates.
-
-%     Clearly, \(I = I_0\) and \(w = \epsilon\) before entering the loop, so \(\Delta_\Gc(I_0, w) = \delta_\Gc(I, \epsilon) = I\).
-%     As \(I_0 \in \Vc_\Gc\), we have that \(I \neq 0\). Finally, as \(X = \Vc_\Gc\) before 
-%     entering the loop, \(\Delta_\Hc(\Vc_\Hc, w) = \Delta_\Hc(X, \epsilon) = X)\), so the invariants hold 
-%     before entering the loop.
-
-%     Suppose the invariants were true before the current iteration of the loop and \(I\), \(J\), \(w\), and \(X\)
-%     had the values \(I_n\), \(J_n\), \(w_n\) and \(X_n\), respectively. Furthermore, suppose the loop does not exit
-%     after the current iteration. Because of this, then the algorithm must enter the 
-%     if statement on line 8 (and not enter the if statement on line 12), so there is a word \(u\) such that \(\delta_\Gc(I_n, u) \neq 0\)
-%     and \(\delta_\Hc(J_n, u) = 0\). We can see that \(w = w_n u\), \(I = \delta_\Gc(I_n, u)\), and 
-%     \(X = \Delta_\Hc(X_n, u)\) at the end of the current iteration, so from this, we can see 
-%     \[\delta_\Gc(I_0, w) = \delta_\Gc(I_0, w_n u) = \delta_\Gc(\delta_\Gc(I_0, w_n), u) = \delta_\Gc(I_n, u) = I\]
-%     and similarly,
-%     \[\Delta_\Hc(\Vc_\Hc, w) = \Delta_\Hc(\Vc_\Hc, w_n u) = \Delta_\Hc(\Delta_\Hc(\Vc_\Hc, w_n), u) = \Delta_\Hc(X_n, u) = X.\]
-%     Therefore, all the invariants hold before the next iteration of the loop.
-%     Finally, note that as \(\delta_\Hc(J_n, u) = 0\) and \(J_n \in X\), \(|X|\) is strictly less 
-%     than \(|X|\). This guarantees the loop terminates as if the exit condition is never 
-%     true, then \(|X| = 0\) will be true for some iteration so \(X = \varnothing\) and the algorithm exits on line 13. 
-
-%     Now, we will show the correctness of the algorithm. Suppose algorithm returns false. Then \(X = \varnothing\) so 
-%     from the invariants, \(\delta_\Gc(I_0, w) = I \neq 0\) so 
-%     \(w \in \Bc(\shift{\Gc})\) and \(\Delta_\Hc(\Vc_\Hc, w) = \varnothing\) so \(w \notin \Bc(\shift{\Hc})\).
-%     Therefore, \(\shift{\Gc} \nsubseteq \shift{\Hc}\). 
-
-%     Conversely, suppose \(\shift{\Gc} \nsubseteq \shift{\Hc}\). That is, there is a word \(w \in \Bc(\shift{\Gc})\)
-%     but \(w \notin \Bc(\shift{\Hc})\). As \(w \in \Bc(\shift{\Gc})\), then \(\delta_\Gc(I^*, w) \neq 0\)
-%     for some vertex \(I^*\) in \(\Gc\). As \(w \notin \Bc(\shift{\Hc})\), then 
-%     \(\delta_\Hc(J, w) = 0\) for all vertices \(J\) in \(\Hc\). As the algorithm will eventually have 
-%     \(I\) take the value of \(I^*\) on line 7, we can see that \(w\) satisfies the conditions 
-%     for a word \(u\) such that \(\delta_\Gc(I, u) \neq 0\) and \(\delta_\Hc(J, u) = 0\), so 
-%     the algorithm enters the if statement on line 8. We can 
-%     see the value of \(X\) is updated to \(\varnothing\) as \(\delta_\Hc(J, u) = 0\) for all vertices
-%     \(J\) in \(\Hc\), so the algorithm returns false.
-% \end{proof}
-
-% \begin{theorem}
-    
-% \end{theorem}
-
-% \begin{theorem}
-%     If \Cref{algsubshift} is ran on inputs \(\GtH\) and \(\Hc\), then it returns true if and only 
-%     if \(\shift{\GtH} \subseteq \shift{\Hc}\). 
-% \end{theorem}
-
-% \begin{proof}
-%     Notice that in \Cref{algsubshiftcorrectness}, irreducibility is only invoked when arguing 
-%     \(\shift{\Gc} \nsubseteq \shift{\Hc}\). Therefore, it suffices to show that if 
-%     \(\shift{\GtH} \nsubseteq \shift{\Hc}\), then the algorithm returns false.
-
-%     Let \(w^* \in \Bc(\shift{\GtH})\) but \(w^* \notin \Bc(\shift{\Hc})\). That is, 
-%     \(\delta_\GtH(I^*, w^*) \neq 0\) for some vertex \(I^*\) in \(\Gc\) and 
-%     \(\delta_\Hc(J^*, w^*) = 0\) for any vertex \(J^*\) in \(\Hc\). Clearly, the 
-%     algorithm will eventually enter the loop 
-%     on lines 5-16 with \(I = I^*\) and \(J = J^*\), so a word \(u\) such that 
-%     \(\delta_\GtH(I, u) \neq 0\) and \(\delta_\Hc(J, u) = 0\) exists. Suppose that 
-%     for whatever word the algorithm picked, it was not the case that the algorithm 
-%     returned false. That is, it continued onto the next iteration, 
-%     as \(\Delta_\Hc(\Vc_\Hc, w) \neq 0\), \(\delta_\Hc(J^{**}, w)\) for some 
-%     vertex \(J^{**}\) in \(\Hc\). If the current value of \(I\) is a 
-%     vertex in \(\Gc\), then as \(\Gc\) is irreducible, there is some word \(v\) such that 
-%     \(\delta_\GtH(I, v) = I^*\) so \(\delta_\GtH(I, vw^*) = \delta_\GtH(\delta_\GtH(I, v), w^*)
-%     = \delta_\GtH(I^*, w^*) \neq 0\) and \(\delta_\Hc(J, vw^*) = \delta_\Hc(\delta_\Hc(J, v), w^*) = 0\),
-%     so such a word \(u\) the algorithm is looking for exists.
-
-%     Otherwise, the current value of \(I\) is a vertex in \(\Hc\). Notice that if 
-%     \(\Hc\) is follower separated, we can define a partial order \(\leq\) on the 
-%     vertices of \(\Hc\) such that for vertices \(A\) and \(B\), \(A \leq B\) 
-%     if and only if \(F(A) \subseteq F(B)\). As there are only finitely many 
-%     vertices in \(\Hc\), there is a maximal 
-%     vertex \(M\) in \(\Hc\) with respect to \(\leq\); i.e. for all vertices \(K\) in \(\Hc\), 
-%     if \(M \leq K\), then \(M = K\). As \(\Hc\) is irreducible, then there is 
-%     some word \(m\) such that \(\delta_\GtH(I, m) = M\). As \(F(I) \subseteq F(J)\),
-%     \(\delta_\Hc(J, m) \neq 0\). If \(\delta_\Hc(J, m) \neq M\), then 
-%     \(M \nleq K\), so \(F(M) \nsubseteq F(K)\). But if this is so, there is a word 
-%     \(m^* \in F(M)\) but \(m^* \notin F(K)\), so \(\delta_\GtH(I, mm^*) = \delta_\GtH(\delta_\GtH(I, m), m^*)
-%     = \delta_\GtH(M, m^*) \neq 0\) and \(\delta_\Hc(J, mm^*) = \delta_\Hc(\delta_\Hc(J, m), m^*) = 0\), 
-%     so there is such a word \(u\) in this case. 
-
-%     The final case is if \(\delta_\Hc(J, m) = M\). If this is the case
-% \end{proof}
-
-
-% \begin{theorem}
-%     \(\shift{\GtH} = \shift{\Hc}\) iff there is a function \(g : \Vc_\Gc \to \mathcal{P}(\Vc_\Hc)\) such that 
-%     for each \(K \in \Vc_\Gc\), \[F(K) \subseteq \bigcup_{L \in g(K)} F(L),\] i.e. \(F(g(K))\) covers \(F(K)\).
-% \end{theorem}
-
-% \begin{proof}
-%     Suppose such \(g\) exists. For \(w \in \Bc(\shift{\GtH})\), there is some \(K \in \Vc_{\GtH}\) such that 
-%     \(w \in F(K)\). If \(K \in \Vc_\Hc\), then \(w \in \Bc(\shift{\Hc})\). Otherwise, we have 
-%     \(K \in \Vc_\Gc\), which gives us that there is some \(L \in g(K)\) such that \(w \in F(L)\). As 
-%     \(L \in \Vc_\Hc\), then \(w \in \Bc(\shift{\Hc})\). Therefore, \(\Bc(\shift{\GtH}) \subseteq \Bc(\shift{\Hc})\) 
-%     and thus \(\shift{\GtH} = \shift{\Hc}\).
-
-%     Conversely, suppose \(\shift{\GtH} = \shift{\Hc}\). For \(K \in \Vc_\Gc\), define \[g(K) \triangleq \Vc_\Hc\]
-%     If \(w \in F(K)\), then \(w \in \Bc(\shift{\GtH})\). As \(\shift{\GtH} = \shift{\Hc}\), then 
-%     \(w \in \Bc(\shift{\Hc})\) and there is some \(L \in \Vc_\Hc\) 
-% \end{proof}
-
-% \begin{theorem}
-%     \(\shift{\GtH} = \shift{\Hc}\) iff for each \(K \in \Vc_\Gc\), there is some \(L \in \Vc_\Hc\)
-%     such that \(F(K) \subseteq \Bc(\shift{\Hc}) \).
-% \end{theorem}
-
-% \begin{proof}
-%     Conversely, suppose \(\shift{\GtH} = \shift{\Hc}\). For \(K \in \Vc_\Gc\), we have
-%     \(F(K) \subseteq \Bc(\shift{\GtH}) = \Bc(\shift{\Hc})\).
-% \end{proof}
-
-
-
-% \begin{theorem}
-%     % \todo{Redux of previous.}
-%     The following are equivalent: 
-
-%     \begin{enumerate}[(i)]
-%         \item \(\shift{\GtH}\) is irreducible
-%         \item for every path \(\pi\) in \(\GtH\) that starts in \(\Gc\) there is another path
-%         \(\tau\) in \(\Hc\) presents the same word as \(\pi\).
-%     \end{enumerate}
-% \end{theorem}
-
-% \begin{proof}
-%     Suppose (ii) does not hold. Then, there exists a path \(\pi\) in \(\GtH\) 
-%     that starts in \(\Gc\) such that for every other path \(\tau\) in \(\Hc\),
-%     \(\Lc(\tau) \ne \Lc(\pi)\). The latter condition is equivalent to \(\Lc(\pi) \notin \Bc(\shift{\GtH})\),
-%     and we have \(\Lc(\pi) \in \Bc(\shift{\GtH})\), so by Lemma 1, \(\shift{\GtH}\) is reducible, so (ii) does not hold.
-
-%     Suppose (ii) does hold. We need to show that for \(u, v \in \Bc(\shift{\GtH})\),
-%     there is a word \(w \in \Bc(\shift{\GtH})\) such that \(uwv \in \Bc(\shift{\GtH})\).
-%     Let \(\pi, \tau\) be paths in \(\GtH\) that present \(u\) and \(v\), respectivley. 
-%     If \(\tau\) starts in \(\Hc\), then by the construciton of \(\GtH\), \todo{I think this should be a lemma or something for clarity. All 
-%     this argument is that any vertex in \(\Hc\) is reachable from any other vertex in \(\GtH\), by the nature of \(\GtH\).}
-%     there is a path \(\rho\) in \(\GtH\) that starts at \(t(\pi)\) 
-%     and ends at \(i(\tau)\). Hence, \(\pi\rho\tau\) is a path in \(\GtH\) and 
-%     \[\Lc(\pi\rho\tau) = \Lc(\pi)\Lc(\rho)\Lc(\tau) = u\Lc(\rho)v,\]
-%     so \(u\Lc(\rho)v \in \Bc(\shift{\GtH})\). Otherwise, 
-%     if \(\tau\) does not start in \(\Hc\), then it must start in \(\Gc\). By (ii),
-%     there is a path \(\tau'\) in \(\Hc\) with that presents \(\Lc(\tau)\). By the construction of 
-%     \(\GtH\), there is a path \(\rho\) in \(\GtH\) that starts at \(t(\pi)\) and ends at \(i(\tau')\). Hence,
-%     \(\pi\rho\tau'\) is a path in \(\GtH\) and \[\Lc(\pi\rho\tau') = \Lc(\pi)\Lc(\rho)\Lc(\tau') = u \Lc(\rho)\Lc(\tau) = u \Lc(\rho)v,\]
-%     so \(u\Lc(\rho)v \in \Bc(\shift{\GtH})\). In either case, we found a word \(w \in \Bc(\shift{\GtH})\) 
-%     such that \(uwv \in \Bc(\shift{\GtH})\). Therefore, \(\GtH\) is irreducible, so (i) holds.
-% \end{proof}
-
-% \begin{theorem}
-%     If \(\shift{\GtH}\) is irreducible and \(\ell notin \Lc(t_H^{-1}(J))\), then ??.
-% \end{theorem}
-
-% \begin{proof}
-    
-% \end{proof}
-
-% \begin{theorem}
-%     If \(\shift{\GtH}\) is irreducible, then no vertex in \(\Gc\) is syncrhonizing for \(\GtH\).
-% \end{theorem}
-
-% \begin{proof}
-%     Suppose that \(\shift{\GtH}\) is irreducible and that there is some vertex in \(\Gc\) that is syncrhonizing for \(\GtH\).
-%     Let \(v\) be the word that synchronizes to this vertex and let \(u\) be a word 
-%     that syncrhonizes to some vertex in \(\Hc\). As \(\shift{\GtH}\) is irreducible, then 
-%     there is a word \(w \in \Bc(\shift{\GtH})\) such that \(uwv \in \Bc(\shift{\GtH})\), 
-%     so there is some path \(\pi\) in \(\GtH\) with \(\Lc(\pi) = uwv \). The subpath in \(\pi\) 
-%     presenting \(wv\) must start at some vertex in \(\Hc\) and end at some vertex in \(\Gc\),
-%     due to the synchronicity of \(u\) and \(v\). But this is a contradiction, as there is no 
-%     path from any vertex in \(\Hc\) to any vertex in \(\Gc\), so we conclude that 
-%     if \(\shift{\GtH}\) is irreducible, then no vertex in \(\Gc\) is syncrhonizing for \(\GtH\).
-% \end{proof}
-
-% \begin{theorem}
-%     If \(\shift{\GtH}\) is irreducible, then every word that is syncrhonizing for \(\GtH\) is syncrhonizing 
-%     for \(\Hc\).
-% \end{theorem}
-
-% \begin{proof}
-%     By Theorem 7, if \(\shift{\GtH}\) is irreducible, then \(\shift{\GtH} = \shift{\Hc}\). Let 
-%     \(w\) be a syncrhonizing word for \(\GtH\) and \(\pi\) be a path presenting \(w\). As 
-%     \(\shift{\GtH} = \shift{\Hc}\), there is another path \(\tau\) in \(\Hc\) presenting 
-%     \(w\). But \(\tau\) is also in \(\GtH\) and it presents \(w\), so it must syncrhonize
-% \end{proof}
-
-% \newpage
-
-% \section{Minimality}
-
-% \todo[inline]{This section will probably hardness 
-% of sofic shift problems.
-% As the one of the earlier sections 
-% that was written, this could be rewritten and streamlined 
-% a bit with the other sections.
-% Other things to do: define "irreducible shift" decision problem.
-% Give reduction from GI to irreducible shift, conclude irreducible shift is GI-hard.
-% Give reduction from irreducible shift to minimality, conclude minimality is GI-hard.
-% }
-
-
-%     \begin{theorem}
-%         \todo{Move this to an appropriate section.}
-%         If \(\mathcal{G} = (G, \mathcal{L})\) is the minimizing right resolving
-%         presentation of an irreducible sofic shift \(X\) and \(X\) is and
-%         \(N\)-step shift of finite type, then \(\shift{G} \cong \shift{\Gc}\).
-%     \end{theorem}
-    
-%     \begin{proof}
-%         Let \(x, y\) be walks in \(\shift{G}\). Suppose \(\mathcal{L}_\infty(x)=\mathcal{L}_\infty(y)\),
-%         For any \(i\), the paths \(x_{[i-N, i-1]}\) and \(y_{[i-N, i-1]}\) present 
-%         the same word. Because that word is of length \(N\), the word is synchronizing
-%         for \(\mathcal{G}\) (from 3.4.17), so those paths end at the same vertex. Since
-%         \(\mathcal{L}(x_{[i]}) = \mathcal{L}(y_{[i]})\), \(\mathcal{G}\) is right 
-%         resolving, and \(x_{[i-N, i-1]}\) and \(y_{[i-N, i-1]}\) end at the same vertex,
-%         then \(x_{[i]} = y_{[i]}\) and hence \(x = y\), so \(\mathcal{L}_\infty\) is injective.
-%         By definition, \(\mathcal{L}_\infty\) is surjective. Therefore, \(\mathcal{L}_\infty\) is bijective and 
-%         a conjugacy from \(\mathsf{X}_G\) to \(\mathsf{X}_\mathcal{G}\).
-%     \end{proof}
-
-
-
-%     % \begin{definition}
-%     %     Let \(G\) and \(H\) be graphs. A \term{graph homomorphism from \(G\) to \(H\)} is 
-%     %     a pair \((\partial\Phi, \Phi)\) where \(\partial\Phi: \Vc_G \to \Vc_H\) 
-%     %     maps verticies of \(G\) to verticies of \(H\) and \(\Phi: \Ec_G \to \Ec_H\) maps 
-%     %     edges of \(G\) to edges of \(H\),
-%     %     such that \(\partial\Phi(i_G(e)) = i_H(\Phi(e))\) 
-%     %     and \(\partial\Phi(t_G(e)) = t_H(\Phi(e))\)
-%     %     for all edges \(e \in \Ec_G\). 
-
-%     %     If both \(\partial\Phi\) and \(\Phi\) are bijective, then the pair is called 
-%     %     a graph isomorphism between \(G\) and \(H\). The two graphs are graph isomorphic (or simply isomorphic) 
-%     %     if there exists a graph isomorphism between them, and is denoted \(G \cong H\).
-%     % \end{definition}
-
-%     % \begin{definition}
-%     %     A \term{labeled graph} is a pair \((G, \Lc)\)
-%     % \end{definition}
-
-%     % \begin{lemma}
-%     %     Let \(G\) and \(H\) be graphs, and \((\partial\Phi, \Phi)\) be a graph isomorphism 
-%     %     between them. Then the inverse pair of maps \((\partial\Phi^{-1}, \Phi^{-1})\) is 
-%     %     a graph homomorphism from \(H\) to \(G\).
-%     % \end{lemma}
-
-%     % \begin{proof}
-%     %     For an edge \(e_G \in \Ec(G)\), we have 
-%     %     \begin{align*}
-%     %         \partial\Phi(i(e)) &= i(\Phi(e))  \\
-%     %         \partial\Phi^{-1}(\partial\Phi(i(e))) &= \partial\Phi^{-1}(i(\Phi(e)))\\
-%     %         i(e) &= \partial\Phi^{-1}(i(\Phi(e)))
-%     %     \end{align*}
-%     %     Hence, for an edge \(e_H \in \Ec(H)\), \(\Phi^{-1}(e_H) \in \Ec(G)\) so 
-%     %     \begin{align*}
-%     %         i(\Phi^{-1}(e_H)) &= \partial\Phi^{-1}(i(\Phi(\Phi^{-1}(e_H))))\\
-%     %         &= \partial\Phi^{-1}(i(e_H))
-%     %     \end{align*}
-%     %     A similar argument shows that \(t(\Phi^{-1}(e_H)) = \partial\Phi^{-1}(t(e))\).
-%     % \end{proof}
-
-%     % \begin{definition}
-        
-%     % \end{definition}
-
-%     % \begin{definition}
-%     %     Let \(\Gc = (G, \Lc_G)\) and \(\Hc = (H, \Lc_H)\) be labeled graphs.
-%     %     A label-graph isomorphism is a graph isomorphism \((\partial \Phi, \Phi) : G \to H\)
-%     %     such that \(\Lc_H(\Phi(e)) = \Lc_G(e)\) for all \(e \in \Ec(G)\), which is 
-%     %     denoted \((\partial \Phi, \Phi) : \Gc \to \Hc\). If there exists a label-graph 
-%     %     isomorphism between \(\Gc\) and \(\Hc\), then \(\Gc\) and \(\Hc\) are label-graph
-%     %     isomorphic (or just isomorphic) and is denoted \(\Gc \cong \Hc\).
-%     % \end{definition}       
-
-%     % \begin{theorem}
-%     %     Let \(\Gc = (G, \Lc_G)\) and \(\Hc = (H, \Lc_H)\) be labeled graphs. 
-%     %     If \(\Gc \cong \Hc\), then \(\shift{\Gc} = \shift{\Hc}\).
-%     % \end{theorem}
-
-%     % \begin{proof}
-%     %     For \(x \in \shift{\Gc}\), there exists a \(y \in \shift{G}\) such that \(x_i = \Lc_G(y_i) = \Lc_H(\Phi(y_i))\).
-%     %     Note that for all \(i \in \mathbb{Z}\),
-%     %     \begin{align*}
-%     %         t(y_i) &= i(y_{i+1})\\
-%     %         \partial \Phi(t(y_i)) &= \partial\Phi(i(y_{i+1}))\\
-%     %         t(\Phi(y_i)) &= i(\Phi(y_{i+1}))
-%     %     \end{align*}
-%     %     so \(\Phi_\infty(y) \in \shift{H}\) and therefore \(x=\left( \Lc_H \circ \Phi \right)_\infty(y) \in \shift{\Hc}\).
-%     % \end{proof}
-
-%     \begin{lemma}
-%         \todo{Move this to an appropriate section.}
-%         If \(X\) and \(Y\) are shift spaces, then \(\Bc(X) \subseteq \Bc(Y)\) if and only if \(X \subseteq Y\).
-%     \end{lemma}
-
-%     \begin{proof}
-%         Let \(x\) be a point in \(X\). Then every word that appears in \(x\) is in \(\Bc(X)\). Since 
-%         \(\Bc(X) \subseteq \Bc(Y)\), then every word that appears in \(x\) is in \(\Bc(Y)\),
-%         so \(x \in Y\), hence \(X \subseteq Y\).
-
-%         Conversely, let \(w\) be a word in \(\Bc(X)\). Then \(w\) occurs in some \(x \in X\). 
-%         Since \(X \subseteq Y\), we have \(x \in Y\), so \(w\) occurs in some \(x \in Y\). Hence, \(w \in \Bc(Y)\).
-%     \end{proof}
-
-%     Let \(\Gc\) and \(\Hc\) be labeled graphs, \(I\) be a vertex from \(\Gc\), and \(J\) 
-%     be a vertex from \(\Hc\). Define the \term{graph connecting \(\Gc\) to \(\Hc\) via \(I\) and \(J\)} 
-%     as the disjoint union of the two graphs, adding an edge starting at \(I\) and ending at \(J\), 
-%     and adding a self loop on \(J\). Label these two new edges with a symbol that 
-%     does not appear in either graph. 
-%     Since \(\Gc\) and \(\Hc\) are subgraphs of a graph connecting the two,
-%     it follows that the presentations of the individual graphs are subshifts of a presentation 
-%     of a graph connecting the two - any bi-infinite walk in one of the graphs is a x
-%     bi-infinite walk of the corresponding subgraph of the connected graphs.
-%     Additionally, observe that the graph is reducible,
-%     as any path starting in \(\Hc\) cannot end in \(\Gc\).
-    
-
-%     \begin{figure}[ht]
-%         \centering
-%         \begin{tikzpicture}
-%             \node[shape=circle, draw=black] (G) at (0,0) {\(\Gc\)};
-%             \node[shape=circle, draw=black] (H) at (2,0) {\(\Hc\)};
-    
-%             \path [->] (G) edge[out=45, in=135] node[above] {\(l\)} (H);
-%             \path [->] (H) edge[out=-45, in=45, distance=15mm] node[right] {\(l\)} (H);
-    
-%         \end{tikzpicture} 
-
-%         \caption{A graph connecting \(\Gc\) to \(\Hc\).}
-%     \end{figure}
-
-%     \begin{theorem}
-%         Let \(\Gc\) and \(\Hc\) be irreducible graphs, and \(\Kc\) be the graph connecting 
-%         \(\Gc\) to \(\Hc\) via \(I\) and \(J\).
-%         If \(\shift{\Kc}\) is irreducible, then
-%         \(\shift{\Gc} \subseteq \shift{\Hc}\).
-%     \end{theorem}
-
-%     \begin{proof}
-%         First, suppose that \(\shift{\Kc}\) is irreducible, and let \(u \in \Bc(\shift{\Gc})\). 
-%         There is a path in \(\Gc\) that presents \(u\), hence there is a path in the 
-%         \(\Gc\) subgraph of \(\Kc\) that presents \(u\). From the irreducibility of 
-%         \(\Gc\), there is a path from the terminating vertex of a path presenting 
-%         \(u\) to \(I\). Let \(v\) be the word such path presents and \(l\) be 
-%         the label of the edge connecting \(\Gc\) to \(\Hc\), so that we have 
-%         \(uvl \in \Bc(\shift{\Kc})\) and \(u \in \Bc(\shift{\Kc})\). As \(\shift{\Kc}\)
-%         is irreducible, there exists a word \(w \in \Bc(\shift{\Kc})\) such that 
-%         \(uvlwu \in \Bc(\shift{\Kc})\). A path presenting \(uvlwu\) must have the 
-%         subpath presenting \(wu\) visit vertices only from the \(\Hc\) subgraph of \(\Kc\).
-%         This implies that there is a path in \(\Hc\) presenting \(u\), so we have 
-%         \(u \in \Bc(\shift{\Hc})\) and therefore \(\Bc(\shift{\Gc}) \subseteq \Bc(\shift{\Hc})\),
-%         and \(\shift{\Gc} \subseteq \shift{\Hc}\) via Lemma 1.
-%         % Consider two words \(u, v\) from \(\Bc(\shift{\Kc})\). Suppose there is a path 
-%         % that presents \(u\) and ends in \(\Gc\) and a path \(\)
-%         %
-%         % Then there is always a word \(w \in \Bc(\shift{\Kc})\)
-%         % such that \(uwv \in \Bc(\shift{\Kc})\), as from 
-%         %
-%         % Conversely, suppose \(\shift{\Gc} \subseteq \shift{\Hc}\). Let \(u, v\) be words from \(\Bc(\shift{\Kc})\),
-%         % and \(\pi, \tau\) be paths presenting \(u\) and \(v\), respectivley. 
-%         % If \(\pi\) ends in \(\Gc\), then consider either the case where \(\tau\) starts 
-%         % in \(\Gc\) and the case where \(\tau\) starts in \(\Hc\).
-%         % In the first case, from irreducibility of \(\Gc\), there is a path 
-%         % connecting \(\pi\) to \(\tau\). In the second case, from the irreducibility 
-%         % of \(\Gc\), there is a path connecting \(\pi\) to the path starting at \(I\) and 
-%         % ending at \(J\) (that is, the edge connecting \(\Gc\) to \(\Hc\)). From the 
-%         % irreducibility of \(\Hc\), there is a path from \(J\) to the starting vertex 
-%         % of \(\tau\), so if \(\tau\) ends in \(\Hc\), then there is a path connecting 
-%         % \(\pi\) to \(\tau\). Hence, for a word \(u\) with a path ending in \(\Gc\) 
-%         % that presents it, then there exists a word \(w \in \Bc(\shift{\Kc})\) such 
-%         % that \(uwv \in \Bc(\shift{\Kc})\).
-%         % If \(\pi\) does not end in \(\Gc\), then it ends in \(\Hc\). From the 
-%         % irreducibility of \(\Hc\), there is a path connecting \(\pi\) to \(\tau\)
-%         % if \(\tau\) starts in \(\Hc\). If \(\tau\) started in \(\Gc\), then there is no
-%         % path connecting them. However, if \(\tau\) ends in \(\Hc\), then the \(\tau = \tau_1 e \tau_2\)
-%         % where \(\tau_1\) is a path in \(\Gc\) ending at \(I\).
-%         % We have \(\Lc(\tau_1) \in \Bc(\shift{\Gc})\) and hence \(\Lc(\tau_1) \in \Bc(\shift{\Hc})\)
-%         % since \(\shift{\Gc} \subseteq \shift{\Hc}\).
-%         % This means there is a path \(\tau_1'\) in \(\Hc\) that presents 
-%     \end{proof}
-
-%     \begin{theorem}
-%         Let \(\Gc\) and \(\Hc\) be irreducible, minimal, right-resolving presentations. 
-%         If \(\shift{\Gc} = \shift{\Hc}\), then there exists a pair
-%         of vertices \((I, J) \in (\Vc_\Gc \times \Vc_\Hc)\) such that both the graph connecting \(\Gc\) to \(\Hc\) via 
-%         \(I\) and \(J\) and the graph connecting \(\Hc\) to \(\Gc\) via \(J\) and \(I\) both 
-%         present irreducible shifts.
-
-%         Equivalently, if for every pair of vertices \((I, J) \in (\Vc_\Gc, \Vc_\Hc)\) 
-%         the graph connecting \(\Gc\) to \(\Hc\) via \(I\) and \(J\) 
-%         and the graph connecting \(\Hc\) to \(\Gc\) via \(J\) and \(I\)
-%         do not both present irreducible shifts.
-%     \end{theorem}
-
-%     \begin{proof}
-%         Suppose \(\shift{\Gc} = \shift{\Hc}\). Since \(\Gc\) and \(\Hc\) are irreducible,
-%         minimal, right-resolving presentations of the same shift, they must be 
-%         isomorphic. Let \((\partial\Phi, \Phi)\) be a graph isomorphism between them. 
-%         Choose an arbitrary vertex I from \(\Gc\), and then let \(\Kc\) 
-%         be the graph connecting \(\Gc\) to \(\Hc\) via \(I\) and \(\partial\Phi(I)\).
-%         Let \(f\) be the self loop on \(\partial\Phi(I)\) added in the construction of
-%         \(\Kc\), and \(\Hc^+\) be the \(\Hc\) of \(\Kc\) subgraph plus \(f\).
-%          As 
-%         \(\Hc\) is irreducible, then \(\Hc^+\) is irreducible. 
-%         It suffices to show that \(\shift{\Kc} = \shift{\Hc^+}\) to show \(\shift{\Kc}\) 
-%         is irreducible. 
-
-%         % Let \(u, v\) be words from \(\Bc(\shift{\Kc})\),
-%         % and \(\pi, \tau\) be paths presenting \(u\) and \(v\), respectivley. 
-%         % If \(\pi\) ends in \(\Gc\), then consider either the case where \(\tau\) starts 
-%         % in \(\Gc\) and the case where \(\tau\) starts in \(\Hc\).
-%         % In the first case, from irreducibility of \(\Gc\), there is a path 
-%         % connecting \(\pi\) to \(\tau\). In the second case, from the irreducibility 
-%         % of \(\Gc\), there is a path connecting \(\pi\) to the path starting at \(I\) and 
-%         % ending at \(J\) (that is, the edge connecting \(\Gc\) to \(\Hc\)). From the 
-%         % irreducibility of \(\Hc\), there is a path from \(J\) to the starting vertex 
-%         % of \(\tau\), so in total, if \(\tau\) ends in \(\Hc\), then there is a path connecting 
-%         % \(\pi\) to \(\tau\). Hence, for a word \(u\) with a path ending in \(\Gc\) 
-%         % that presents it, then there exists a word \(w \in \Bc(\shift{\Kc})\) such 
-%         % that \(uwv \in \Bc(\shift{\Kc})\).
-
-%         % If \(\pi\) does not end in \(\Gc\), then it ends in \(\Hc\). From the 
-%         % irreducibility of \(\Hc\), there is a path connecting \(\pi\) to \(\tau\)
-%         % if \(\tau\) starts in \(\Hc\). If \(\tau\) started in \(\Gc\), then there is no
-%         % path connecting \(\pi\) to \(\tau\). However, if \(\tau\) ends in \(\Hc\), then the \(\tau = \tau_1 e \tau_2\)
-%         % where \(\tau_1\) is a path in \(\Gc\) ending at \(I\), \(e\) is the edge connecting 
-%         % \(\Gc\) and \(\Hc\), and \(\tau_2\) is a path in \(\Hc\) starting at \(J\).
-
-%         Let \(u\) be a word from \(\Bc(\shift{\Kc})\), and \(\pi\) be a path that presents it.
-%         Without loss of generality, assume \(u\) and \(\pi\) are nonempty.
-%         If \(\pi\) starts in \(\Hc^+\), then \(u \in \Bc(\shift{\Hc^+})\). Otherwise, it 
-%         starts in \(\Gc\) and either ends in \(\Gc\) or ends in \(\Hc^+\). 
-%         For the case of \(\pi\) ending in \(\Gc\), then \(\Phi(\pi)\) is a path in 
-%         \(\Hc\) presenting \(u\), as \((\partial\Phi, \Phi)\) is a graph isomorphism,
-%         so \(u \in \Bc(\shift{\Hc^+})\).
-%         For the case of \(\pi\) ending in \(\Hc^+\), we can split 
-%         \(\pi\) into \(\pi=\pi_1 e \pi_2\), where \(\pi_1\) and \(\pi_2\)
-%         are (possibly empty) paths from \(\Gc\) and \(\Hc^+\), respectivley, and 
-%         \(e\) is the edge connecting \(\Gc\) and \(\Hc\). Note 
-%         that \(\Phi(\pi_0)\) is a path in \(\Hc\) and that it terminates
-%         at \(\partial\Phi(I)\) as \(\pi_0\) terminates at \(I\), assuming \(\pi_0\) is nonempty.
-%         From this, we have that \(\Phi(\pi_0)f\pi_1\) is path in \(\Hc^+\) that presents \(u\), 
-%         so \(u \in \Bc(\shift{\Hc^+})\).
-
-%         Hence, we have \(\Bc(\shift{\Kc}) \subseteq \Bc(\shift{\Hc^+})\), and from 
-%         the construction of \(\Kc\), we also have \(\Bc(\shift{\Hc^+}) \subseteq \Bc(\shift{\Kc})\), 
-%         so \(\Bc(\shift{\Kc}) = \Bc(\shift{\Hc^+})\) and \(\shift{\Kc} = \shift{\Hc^+}\). Thus,
-%         we have shown the graph connecting \(\Gc\) to \(\Hc\) via \(I\) and \(\partial\Phi(I)\)
-%         presents an irreducible shift. A similar argument can be made showing that 
-%         the graph connecting \(\Hc\) to \(\Gc\) via \(\partial\Phi(I)\) and \(I\) presents 
-%         an irreducible shift (start from ``\dots and then let \(\Kc\)'', and replace
-%         \(\Gc \mapsto \Hc, \Hc \mapsto \Gc, I \mapsto \partial\Phi(I), \partial\Phi(I) \mapsto I,
-%         \Hc^+ \mapsto \Gc^+, \Phi(\pi_0) \mapsto \Phi^{-1}(\pi_0)\)).
-%     \end{proof}
-
-%     \begin{theorem}
-%         Given an oracle for minimizing a reducible presentation, deciding 
-%         if two irreducible, minimal, right-resolving labeled graphs are isomorphic can be determined in polynomial time.
-%     \end{theorem}
-
-%     \begin{proof}
-%         Let the decision procedure be as follows:
-%         for every pair of vertices
-%         \((I, J) \in (\Vc_\Gc \times \Vc_\Hc)\) between the graphs,
-%         construct and set \(\Gc_I\to\Hc_J\) as the graph connecting \(\Gc\) to \(\Hc\)
-%         via \(I\) and \(J\), and similarly, construct and set \(\Hc_J \to \Gc_I\) as the graph connecting 
-%         \(\Hc\) to \(\Gc\) via \(J\) and \(I\). Then,
-%         using the oracle, minimize \(\Gc_I \to \Hc_J\) and check if it is strongly connected (that is, irreducible),
-%         and if so, then from Theorem 2, we know we can 
-%         set \(\shift{\Gc} \subseteq \shift{\Hc}\) to be true.
-%         Similary, minimize \(\Hc_J \to \Gc_I\) and check if it is strongly connected, and 
-%         if so, set \(\shift{\Hc} \subseteq \shift{\Gc}\) to be true.
-%         If at any point both \(\shift{\Gc} \subseteq \shift{\Hc}\) and \(\shift{\Hc} \subseteq \shift{\Gc}\)
-%         are set to true, then \(\shift{\Gc} = \shift{\Hc}\) and thus can conclude \(\Gc \cong \Hc\) (as 
-%         \(\Gc\) and \(\Hc\) are unique, minimal, and irreducible presentations). If you find that 
-%         after every pair of verticies that one or both  
-%         of \(\shift{\Gc} \subseteq \shift{\Hc}\) and \(\shift{\Hc} \subseteq \shift{\Gc}\)
-%         were not set to true, then we have that for all pairs of verticies,
-%         the presentations of the pair of graphs constructed were not both 
-%         irreducible, as if they were, then both \(\shift{\Gc} \subseteq \shift{\Hc}\)
-%         and \(\shift{\Hc} \subseteq \shift{\Gc}\) would be true, so via Theorem 3, we have that \(\shift{\Gc} \neq \shift{\Hc}\)
-%         and can conclude \(\Gc \ncong \Hc\) (as again, \(\Gc\) and \(\Hc\) are irreducible, minimal, right-resolving 
-%         graphs).
-        
-%         The worst case runtime of the decision procedure is if \(\Gc \ncong \Hc\),
-%         as we minimize and check strongly connected-ness twice 
-%         (of a graph that is potentially the size of both \(\Gc\) and \(\Hc\))
-%         for each pair of verticies, so the runtime is \(O((V+E)\cdot V^2)\),
-%         where \(V\) is the number of verticies of one graph and \(E\)
-%         is the number of edges of one graph.
-%     \end{proof}
-
-% \newpage
-
-% \section{Graph isomorphisms}
-
-% \begin{definition}
-%     An \term{undirected graph} is a pair \(G = (V, E)\), where \(V\) is a 
-%     finite set of vertices and \(E \subseteq V \times V\) is a symmetric and irreflexive relation
-%     on \(V\).
-% \end{definition}
-
-% \begin{definition}
-%     Given undirected graphs \(G = (V_G, E_G)\) and \(H = (V_H, E_H)\), an isomorphism from \(G\) to \(H\)
-%     is a bijection \(\varphi : V_G \to V_H\) such that for all \(I, J \in V_G\), 
-%     \((I, J) \in E_G\) if and only if \((\varphi(I), \varphi(J)) \in E_H\). If there is 
-%     and isomorphism from \(G\) to \(H\), then we say \(G\) and \(H\) are isomorphic.
-
-%     Given labeled graphs \(\Gc\) and \(\Hc\), an isomorphism from \(\Gc\) to \(\Hc\) 
-%     is a pair of bijections \(\partial\Phi : \Vc_\Gc \to \Vc_\Hc\) and \(\Phi : \Ec_\Gc \to \Ec_\Hc\)
-%     such that for all \(e \in \Ec_\Gc\), \(i_\Hc(\Phi(e)) = \partial\Phi(i_\Gc(e))\), 
-%     \(t_\Hc(\Phi(e)) = \partial\Phi(t_\Gc(e))\), and \(\Lc_\Hc(\Phi(e)) = \Lc_\Gc(e)\).
-% \end{definition}
-
-% \begin{definition}
-%     Define the decision problem \(\GI\) to be the set of all pairs of isomorphic undirected graphs:
-%     \[\GI \triangleq \{ \langle G, H \rangle : G \text{ and } H \text{ are isomorphic undirected graphs} \}\]
-%     Similary, define the decision problem \(\LGI\) to be the set of all pairs of isomorphic labeled graphs:
-%     \[\LGI \triangleq \{ \langle \Gc, \Hc \rangle : \Gc \text{ and } \Hc \text{ are isomorphic labeled graphs} \}\]
-% \end{definition}
-
-% \begin{definition}
-%     Let \(A\) be some decision problem. We say \(A\) is \term{\(\GI\)-hard} if \(\GI\) is polynomial-time Turing reducible 
-%     to \(A\). We say \(A\) is \term{\(\GI\)-complete} if \(A\) is \(\GI\)-hard and \(A\) is polynomial-time
-%     Turing reducible to \(\GI\).
-% \end{definition}
-
-% \begin{theorem}
-%     \(\LGI\) is \(\GI\)-hard.
-% \end{theorem}
-
-% \begin{proof}
-%     % Let \(\Gc\) and \(\Hc\) be labeled graphs. Construct the undirected graph \(G\),
-%     % setting \(V_G \triangleq \Vc_\Gc\) and setting \(E_G\) 
-%     % to be the reflexive closure of \(\{ (I, J) \in \Vc_\Gc \times \Vc_\Gc : I \neq J, i(e) = I \text{ and } t(e) = J \text{ for some } e \in \Ec_\Gc \}\).
-%     % Construct the undirected graph \(H\) in a similar fashion. 
-    
-%     % Suppose \((\partial\Phi, \Phi)\) is an isomorphism from \(\Gc\) to \(\Hc\), then \(\partial\Phi\)
-%     % is an isomorphism from \(G\) to \(H\). Let \(I, J \in V_G\). If \((I, J) \in E_G\), 
-%     % then \(\partial\Phi(I)\)
-
-%     First, we will show that \(\LGI\) is \(\GI\)-hard. Let 
-%     \(G\) and \(H\) be undirected graphs. Construct the labeled graph \(\Gc\) 
-%     with \(\Vc_\Gc \triangleq V_G\), \(\Ec_\Gc \triangleq E_G\) and for all \(I, J \in \Ec_\Gc\),
-%     \(i_\Gc(I, J) \triangleq I\), \(t_\Gc(I, J) \triangleq J\), and \(\Lc_\Gc(I, J) \triangleq \ell\). 
-%     Construct the labeled graph \(\Hc\) in a similar fashion. Obviously, this construction can be done in polynomial-time with respect 
-%     to the size of \(G\) and \(H\).
-
-%     Suppose \(\varphi\) is an isomorphism from \(G\) to \(H\). Define the map 
-%     \(\partial\Phi : \Vc_\Gc \to \Vc_\Hc\) with \(\partial\Phi(I) \triangleq \varphi(I)\) for \(I \in \Vc_\Gc\) 
-%     and \(\Phi : \Ec_\Gc \to \Ec_\Hc\) with \(\Phi(I, J) \triangleq (\varphi(I), \varphi(J))\)
-%     for \(I, J \in \Ec_\Gc\).
-%     % then we can show the maps 
-%     % \(\partial\Phi \triangleq \varphi\) and \(\Phi \triangleq \varphi \times \varphi\)
-%     % \footnote{
-%     %     For functions \(f: A \to C\) and \(g: B \to D\), define the product \(f \times g : A \times B \to C \times D\)
-%     %     as \((f \times g)(a, b) \triangleq (f(a), g(b))\).
-%     % }
-%     % are an isomorphism from \(\Gc\) to 
-%     % \(\Hc\).
-%     Let \((I, J) \in \Ec_\Gc\). Then, 
-%     \begin{align*}
-%         \partial\Phi(i_\Gc(I, J)) &= \partial\Phi(I) \\ 
-%         &= \varphi(I) \\
-%         &= i_\Hc(\varphi(I), \varphi(J)) \qquad (\star)\\ 
-%         &= i_\Hc(\Phi(I, J)),
-%     \end{align*}
-%     and \((\star)\) is well-defined as \((I, J) \in \Ec_\Gc = E_G\) if and only if \((\varphi(I), \varphi(J)) \in E_H = \Ec_\Hc\).
-%     A similar deduction can be used to show \(\partial\Phi(t_\Gc(I, J)) = t_\Hc(\Phi(I, J))\). 
-%     As \(\varphi\) is a bijection from \(V_G\) to \(V_H\), then \(\partial\Phi\) is a 
-%     bijection from \(\Vc_\Gc\) to \(\Vc_\Hc\). One can check that for \(\Phi^{-1}(I, J) \triangleq (\varphi^{-1}(I), \varphi^{-1}(J))\),
-%     \(\Phi^{-1} \circ \Phi = id_{\Ec_\Gc}\) and \(\Phi \circ \Phi^{-1} = id_{\Ec_\Hc}\) 
-%     so \(\Phi\) is a bijection from \(\Gc\) to \(\Hc\). Hence, \((\partial\Phi, \Phi)\) is an 
-%     isomorphism from \(\Gc\) to \(\Hc\).
-
-%     Conversely, suppose \((\partial\Phi, \Phi)\) is an isomorphism from \(\Gc\) to \(\Hc\). Define 
-%     \(\varphi : V_G \to V_H\) with \(\varphi(I) \triangleq \partial\Phi(I)\) for \(I \in V_G\). 
-%     Note that for \((I, J) \in \Ec_\Hc\), \((I, J) = (i_\Hc(I,J), t_\Hc(I, J))\). If \((I, J) \in E_G\),
-%     then 
-%     \begin{align*}
-%         i_\Hc(\Phi(I, J)) &= \partial\Phi(i_\Gc(I, J)) \\ 
-%         &= \partial\Phi(I) \\ 
-%         t_\Hc(\Phi(I, J)) &= \partial\Phi(t_\Gc(I, J)) \\ 
-%         &= \partial\Phi(J),
-%     \end{align*}
-%     so \(\Phi(I, J) = (i_\Hc(\Phi(I, J)), t_\Hc(\Phi(I, J))) = (\partial\Phi(I), \partial\Phi(J)) = (\varphi(I), \varphi(J))\).
-%     Therefore, as \(\Phi(I, J) \in \Ec_\Hc = E_H\), then \((\varphi(I), \varphi(J)) \in E_H\).
-%     Simlarly, note that for \(I, J \in E_\Gc\), \((I, J) = (i_\Gc(I, J), t_\Gc(I, J))\). If 
-%     \((\varphi(I), \varphi(J)) \in E_H\), then 
-%     \begin{align*}
-%         i_\Hc(\Phi(I, J)) &= \partial\Phi(i_\Gc(I, J)) \\ 
-%         &= \partial\Phi(I) \\ 
-%         t_\Hc(\Phi(I, J)) &= \partial\Phi(t_\Gc(I, J)) \\ 
-%         &= \partial\Phi(J),
-%     \end{align*}
-    
-% \end{proof}
+\chapter{Discussion and future work}
+
+Although the algorithm does not fully solve the problem of deciding 
+the irreducibility problem, it does shed some light on a general minimization 
+procedure. For a \(\GtH\)-like graph, if \Cref{algsubshift} returns 
+false on inputs \(\Gc\) and \(\Hc\), then we actually know the presentation 
+is \term{synchronizing}, meaning that every vertex is synchronizing.
+As such, since \(\GtH\) is follower-separated, then by Corollary 5.4 of
+\cite{jonoska1996sofic}, it is minimal.
+
+Looking forwards, determining when \(\shift{\GtH}\) is irreducible when 
+\(\shift{\Gc} \subseteq \shift{\Hc}\) intuitively seems to be linked 
+with how to check if all words coming from \(\Gc\) link up ``properly''
+with \(\Hc\). For example, in \Cref{reducibleevenshift}, this it is 
+simple to see that \(\Gc\) links up with \(\Hc\) properly.
+On the contrary, the presentation in \Cref{notevenshift} is similar 
+to \Cref{reducibleevenshift} in that \(\shift{\Gc} \subseteq \shift{\Hc}\),
+but connects to the wrong place in \(\Hc\), and fails to 
+present the even shift, as it introduces the word 
+\(101\) into the language.
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+        [vertex/.style={circle, fill=black, inner sep=1pt},
+         shorten <=1pt, shorten >= 1pt, >={Stealth[]}]
+        \node[vertex] (A) at (0,0) {};
+        \node[vertex] (B) at (2,0) {};
+        \node[vertex] (C) at (4,0) {};
+
+        \path [->] (A) edge[out=225, in=135, distance=10mm] node[left] {$1$} (A);
+        \path [->] (A) edge[out=45, in=135] node[above] {$0$} (B);
+        \path [->] (B) edge[out=225, in=-45] node[below] {$0$} (A);
+        \path [->] (C) edge node[above] {$1$} (B);
+        \path [->] (C) edge[out=-45, in=45, distance=10mm] node[right] {$0$} (C);
+    \end{tikzpicture} 
+
+    \caption{}
+    \label{notevenshift}
+\end{figure}
+
+The results here are likely to be easily extended to presentations with arbitrarly 
+many irreducible components. In fact, \cite{jonoska1996sofic} notes that 
+for any presentation of an irreducible sofic shift, the subgraph 
+induced by the synchronizing vertices presents the whole shift. In 
+fact, this subgraph is irreducible and a sink (in the sense that 
+there is no path starting at a vertex in the sink and ending 
+in any other irreducible component). If given 
+an arbitrary presentation that presents an irreducible shift, then 
+to minimize it, one would need to find a synchronizing word and then 
+identify the irreducible component it syncrhonizes to. Although not 
+explicity discussed here, finding a syncrhonizing word should be doable in 
+polynomial-time with a modification to \cite{eppstein1990reset}'s algorithm for 
+finding a synchronizing word for DFAs.\footnote{
+    Synchronizing words for DFAs, also known as reset words, differ slightly  
+    from synchronizing words for presentations as the transition function 
+    for DFAs is total to begin with, so the action of 
+    taking the transition of the reset word takes you to the synchronizing 
+    state no matter where you start, while for presentations, the action 
+    of taking the transition of the synchronizing word either brings you 
+    to \(0\) or the synchronizing state.
+} Subshift testing can also be used for partial testing of the irreducibility 
+of the shift a presentation presents. 
+As each shift presented by an irreducible component is a subshift 
+of the shift the whole presentation presents, it is easy to see that 
+if a presentation presents an irreducible shift, then it is 
+necessary that each irreducible component present a subshift of the 
+synchronizing component. 
+
+Finally, the hardness of the general problem of minimization seems 
+to have not been investigated. Those familiar with 
+automata theory can see that presentation of sofic shifts 
+are closely related to \term{nondeterministic finite automata} (NFA),
+as presentations can be interpreted as NFAs
+by making the set of start states 
+all the vertices of the presentation and 
+every state a final state. If we restrict 
+ourselves to deterministic presentations, then the only 
+nondeterminism in the interpreted NFA is the multiple start states. 
+In \cite{holzer2001state} and \cite{malcher2004minimizing}, 
+minimization of a variant of a DFA 
+that allows multiple start states (MDFA) is shown to be 
+\(\mathsf{PSPACE}\)-complete in the former for the general case and
+ \(\mathsf{NP}\)-complete in the latter for a restricted case.
+Every presentation of a sofic shift gives a MDFA, but only ones
+where every state is a final state. Further investigation should 
+be done to see if this restriction affects the hardness of minimization.
 
 \printbibliography
 
