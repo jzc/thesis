@@ -64,8 +64,8 @@ sorting=ynt
     \Large April 2020
 
     \vspace{4cm}
-    \normalsize \textit{A thesis submitted in partial fullfillment of
-    the requirements for the degree of Bachelor of Science in the Deparment of Computer Science \\
+    \normalsize \textit{A thesis submitted in partial fulfillment of
+    the requirements for the degree of Bachelor of Science in the Department of Computer Science \\
     at the University of Colorado Boulder  }
 \end{titlepage}
 
@@ -128,7 +128,7 @@ line between classical differential analysis and abstract symbolic analysis
 used frequently in the study of recurrence and transitivity in dynamical systems, 
 and Morse and Hedlund named the field of symbolic dynamics in their eponymous 
 1938 paper \cite{morse1938symbolic}. Shift spaces (or simply shifts), the main object 
-of study in symbolic dynamics, are sets unending sequences over a finite set of 
+of study in symbolic dynamics, are sets of unending sequences over a finite set of 
 symbols in which certain forbidden finite sequences (know as forbidden words)
 are not allowed to appear in the unending sequences. If a shift space has a finite set of 
 forbidden words that describe it, then the shift space is known as a shift 
@@ -195,12 +195,14 @@ Definitions and notation follow \cite{lind1995introduction} closely.
 \end{definition}
 
 A \term{word} is a finite sequence of letters over some alphabet \(\Ac\). We use 
-\(\epsilon\) to denote the empty word.
+\(\epsilon\) to denote the empty word. The set of all words over \(\Ac\) 
+is denoted \(\Ac^*\). Note that \(\epsilon \in \Ac^*\); the set of all 
+nonempty words over \(\Ac\) is denoted \(\Ac^+\) (so \(\epsilon \notin \Ac^+\)).
 Let \(x=(x_i)_{i \in \mathbb{Z}}\) be a bi-infinite sequence. For \(i \leq j\), the word from the 
 \(i\)th coordinate to the \(j\)th coordinate is denoted \[x_{[i,j]} \triangleq x_i x_{i+1} \dots x_{j}.\]
 
 \begin{definition}
-    Let \(\Fc\) be a set of words over some alphabet, called the \term{forbidden words}.
+    Let \(\Fc\) be a set of words over an alphabet \(\Ac\), called the \term{forbidden words}.
     A \term{shift space} (or simply \term{shift}) is a subset \(\shift{\Fc}\)
     of some full shift \(\Ac^\mathbb{Z}\) such that none of the forbidden words appear in any point of the shift space.
     That is,
@@ -219,10 +221,7 @@ as subshifts.
 \end{definition}
 
 Instead of specifying what words are forbidden in a shift space, we can characterize 
-shift spaces by their languages. If \(L \subseteq \Ac^+\)\footnote{
-    \(\Ac^*\) denotes the set of all words over \(\Ac\) including \(\epsilon\);
-    \(\Ac^+\) is \(\Ac^*\) without \(\epsilon\).
-} is a set of nonempty words, then 
+shift spaces by their languages. If \(L \subseteq \Ac^+\) is a set of nonempty words, then 
 we say \(L\) is \term{factorial} if for every word \(w \in L\), then every nonempty subword 
 is in \(L\). We say \(L\) is \term{prolongable} if there for every word \(w \in L\), 
 there are nonempty words \(u, v \in L\) such that \(uwv \in L\).
@@ -234,8 +233,7 @@ there are nonempty words \(u, v \in L\) such that \(uwv \in L\).
     two shift spaces are equal if and only if their languages are equal.
 \end{theorem}
 
-The following theorem will be useful for our discussion and is simple enough to 
-most likely well known, but no reference was found for it, so we provide a proof.
+The following theorem will be useful for our discussion and is well known, but no reference was found for it, so we provide a proof.
 
 \begin{theorem}
     If \(X\) and \(Y\) are shift spaces, then \(X \subseteq Y\) if and only if \(\Bc(X) \subseteq \Bc(Y)\).
@@ -247,8 +245,8 @@ most likely well known, but no reference was found for it, so we provide a proof
     in \(Y\). Therefore, \(w \in \Bc(Y)\).
 
     Conversely, suppose \(\Bc(X) \subseteq \Bc(Y)\). If \(x \in X\), then every 
-    word occuring in \(x\) is in \(\Bc(X)\). But \(\Bc(X) \subseteq \Bc(Y)\), 
-    so every word occuring in \(x\) is in \(\Bc(Y)\), so \(x \in Y\).
+    word occurring in \(x\) is in \(\Bc(X)\). But \(\Bc(X) \subseteq \Bc(Y)\), 
+    so every word occurring in \(x\) is in \(\Bc(Y)\), so \(x \in Y\).
 \end{proof}
 
 \begin{definition}
@@ -277,14 +275,14 @@ most likely well known, but no reference was found for it, so we provide a proof
 
 \begin{definition}
     A \term{graph}\footnote{
-        In our discussion, a graph really means a directed multigraph; there 
-        can be multiple edges between the same two vertices.
+        In our discussion, a graph really means a directed multigraph; 
+        multiple edges between the same two vertices and self loops are permitted.
     } \(G\) is a \(4\)-tuple \(G = (\Vc, \Ec, i, t)\), where \(\Vc\) is a finite 
     set of \term{vertices}, \(\Ec\) is a finite set of \term{edges}, and \(i : \Ec \to \Vc\) and 
     \(t : \Ec \to \Vc\) are functions assigning an \term{initial} and \term{terminating} vertex for 
-    each edge, respectivley. For an arbitrary graph \(G\), let 
+    each edge, respectively. For an arbitrary graph \(G\), let 
     \(\Vc_G\), \(\Ec_G\), \(i_G\), and \(t_G\) denote the graph's vertices, edges, and 
-    intial and terminating vertex functions, respectivley. 
+    initial and terminating vertex functions, respectively. 
 \end{definition}
 
 
@@ -314,7 +312,7 @@ If \(G\) has no stranded vertices, then we call \(G\) \term{essential}. Every
 non-essential graph can be made essential by removing the stranded vertices, and 
 the resulting graph will have still have the same edge shift. Then, if \(G\) 
 is essential, then every path in \(G\) is necessarily a word in \(\Bc(\shift{G})\). 
-Thus, it simplifies our disucssion to work with essential graphs, as 
+Thus, it simplifies our discussion to work with essential graphs, as 
 it allows us to paths and words in the language of an edge shift synonymously. 
 
 If \(G\) is a graph and \(I\) and \(J\)
@@ -505,22 +503,22 @@ We call this process \term{follower-separation}.
         \item Any two irreducible deterministic presentations of \(X\) 
         that are also follower-\\separated are isomorphic.
         \item Therefore, any two minimal deterministic presentations of \(X\) are isomorphic.
-        \item Additionaly, a deterministic presentation, up to isomorphism, is the unqiue minimal deterministic presentation of \(X\)
+        \item Additionally, a deterministic presentation, up to isomorphism, is the unique minimal deterministic presentation of \(X\)
         if and only if it is irreducible and follower-separated.
     \end{enumerate}
 \end{theorem}
 
 The idea of follower-separation once again borrows ideas from automata theory,
  as minimization of DFAs is done by creating a DFA from the equivalence class of states 
-(defined in a similar manner). However, DFA minimization given the minimal 
-DFA no matter what, but follower-separation does not necessarily yield a minimal 
-presentation. It is only guaranteed to give the mininmal presentation if the 
-original presentation is irreducible (\cite{lind1995introduction} Lemma 3.3.8).
+(defined in a similar manner). However, DFA minimization always yields the minimal 
+DFA, but follower-separation does not necessarily yield a minimal 
+presentation. Follower-separation is only guaranteed to give the minimal presentation if the 
+original presentation is irreducible (\cite[Lemma 3.3.8]{lind1995introduction}).
 
 \begin{example}
     The presentation in \Cref{nonminimaleven} is an irreducible presentation 
     of the even shift but is not follower-separated, so by \Cref{fundamental},
-    it is not minmal. The presentation \Cref{evenshift} is an irreducible 
+    it is not minimal. The presentation \Cref{evenshift} is an irreducible 
     follower-separated presentation of the even shift, so by \Cref{fundamental},
     it is minimal.
 \end{example}
@@ -546,7 +544,7 @@ original presentation is irreducible (\cite{lind1995introduction} Lemma 3.3.8).
 Consider the presentation in \Cref{reducibleevenshift}.
 The shift presented by subgraph induced by \(I\) and \(J\) is the even shift, and every 
 word presented by a path starting from \(K\) is presented by some path starting at 
-\(I\) and \(J\). Hence, this presentation presents the even shift. Additionly, it is 
+\(I\) and \(J\). Hence, this presentation presents the even shift. Additionally, it is 
 also follower-separated as \(01 \in F(K)\backslash F(I)\), \(1 \in F(K)\backslash F(J)\),
 and \(1 \in F(I) \backslash F(J)\). 
 When do follower-separated reducible presentations present irreducible shifts? We will first look 
@@ -578,14 +576,15 @@ a vertex is always reachable from itself, it is routine to check that this defin
 an equivalence relation. The equivalence classes are called \term{irreducible components},
 as the subgraphs induced by each class are irreducible.
 
-Let \term{\(\GtH\)} is an essential, deterministic, follower-separated presentation with two irreducible components
+Let \term{\(\GtH\)} be an essential, deterministic, follower-separated presentation with two irreducible components
 that induce two subgraphs, namely \(\Gc\) and \(\Hc\), such that there is 
 exactly one edge starting in \(\Gc\) and ending in \(\Hc\). 
 Some properties of \(\GtH\) are that the vertices of \(\Gc\) and \(\Hc\)
 partition the vertices of \(\GtH\), both \(\Gc\) and \(\Hc\) are essential,  
 any vertex in \(\Hc\) is reachable from any vertex in \(\GtH\), and no vertex in \(\Gc\) 
-is reachable from any vertex in \(\Hc\). In this section, we will 
-prove some properties of \(\GtH\).
+is reachable from any vertex in \(\Hc\). 
+% In this section, we 
+% prove some properties of \(\GtH\).
 
 \begin{figure}[h]
     \centering
@@ -600,13 +599,6 @@ prove some properties of \(\GtH\).
     \caption{Representation of \(\GtH\).}
 \end{figure}
 
-% \begin{example}
-%     The presentation in \Cref{reducibleevenshift} is \(\GtH\)-like, in the 
-%     sense that it is essential, determinisitc, and has two irreducible components with only one edge 
-%     between.  \(\Gc\) is the subgraph induced 
-%     by \(K\) and \(\Hc\) is the subgraph induced by \(I\) and \(J\).
-% \end{example}
-
 \begin{proposition}\label{extensionthm}
     Every word \(u \in \Bc(\shift{\GtH})\) can be extended on the right to a 
     word \(u w \in \Bc(\shift{\GtH})\) that synchronizes to a vertex \(I\) in \(\Hc\).
@@ -614,12 +606,12 @@ prove some properties of \(\GtH\).
 
 \begin{proof}
     Let \(u \in \Bc(\shift{\GtH})\). As \(\GtH\) is deterministic and 
-    follower-separated, then by \cite{lind1995introduction} Proposition 3.3.16, we can 
+    follower-separated, then by \cite[Proposition 3.3.16]{lind1995introduction}, we can 
     extend \(u\) on the right to \(uw \in \Bc(\shift{\GtH})\) so that \(uw\)
     synchronizes to some vertex \(J\). As \(I\) is a vertex in \(\Hc\), 
     \(I\) can be reached from \(J\), so let \(v\) be  the label of a path 
-    from \(I\) to \(J\). Then, \(uwv \in \Bc(\shift{\GtH})\) and any path presenting 
-    \(uwv\) must end at \(J\), so \(uwv\) synchornizes to \(I\).
+    from \(J\) to \(I\). Then, \(uwv \in \Bc(\shift{\GtH})\) and any path presenting 
+    \(uwv\) must end at \(I\), so \(uwv\) synchronizes to \(I\).
 \end{proof}
 
 \begin{corollary}\label{hsync}
@@ -641,9 +633,9 @@ prove some properties of \(\GtH\).
     By \Cref{extensionthm}, we can extend \(u\) on the right to a word \(uw \in \Bc(\shift{\GtH})\)
     so that any path presenting \(uw\) synchronizes to a vertex \(I\) in \(\Hc\). 
     We want to show that there is no word joining \(uw\) and \(u\). As \(uw\)
-    synchronizes to \(I\), then by \cite{lind1995introduction} Lemma 3.3.15, \(F(I) = F(uw)\). 
+    synchronizes to \(I\), then by \cite[Lemma 3.3.15]{lind1995introduction}, \(F(I) = F(uw)\). 
     From the definition of irreducibility and follower sets of words, we 
-    can see \(v\) is a word joining \(uw\) and \(w\)
+    can see \(v\) is a word joining \(uw\) and \(u\)
     exactly when \(v \in F(uw)\) and \(u \in F(uwv)\).
     For any word \(v \in F(I)\), there is some path labeled \(v\) starting 
     at \(I\) and ending at \(J\) for some vertex \(J\) in \(\GtH\). Clearly,
@@ -683,9 +675,22 @@ prove some properties of \(\GtH\).
 \begin{proof}
     Suppose \(\shift{\Gc} \nsubseteq \shift{\Hc}\). Then, there is a word \(w \in \Bc(\shift{\Gc})\) 
     but \(w \notin \Bc(\shift{\Hc})\). We can extend \(w\) to a word \(wu \in \Bc(\shift{\Gc})\) such 
-    that \(wu\) is synchronizing for \(\Gc\). Therefore, every path in \(\GtH\) presenting \(wu\) 
-    must be in \(\Gc\) as \(w \notin \Bc(\shift{\Hc})\), and as \(wu\) is synchronizing 
-    for \(\Gc\), then it is synchronizing for \(\GtH\).
+    that \(wu\) is synchronizing for \(\Gc\). 
+    If every path in \(\GtH\) presenting \(wu\) ends in \(\Gc\), then 
+    \(wu\) is synchronizing for \(\GtH\) (as every path presenting \(wu\) would be a path in \(\Gc\)).
+    Otherwise, let \(\pi\) be any 
+    presenting \(wu\) starting at some vertex in \(\Gc\) and ending
+    at a vertex in \(\Hc\). As \(w \notin \Bc(\shift{\Hc})\), 
+    there is no path in \(\Hc\) presenting \(w\), so the label of any 
+    path starting with \(\pi\) does not end with the word \(w\). As \(\pi\)
+    was arbitrary, then
+    any path that starts in \(\Gc\) and ends in \(\Hc\) whose label 
+    begins with \(wu\) does not end with \(w\). But as 
+    \(\shift{\Gc}\) is irreducible, \(wu \in \Bc(\shift{\Gc})\), 
+    and \(w \in \Bc(\shift{\Gc})\), there is a word \(v\) such that 
+    \(wuvw \in \Bc(\shift{\Gc})\). Therefore, any path in \(\GtH\) presenting 
+    this \(wuvw\) cannot end in \(\Hc\), so it must end in \(\Gc\)
+    and thus \(wuvw\) is synchronizing for \(\Gc\).
 
     Conversely, suppose there is a word \(w \in \Bc(\shift{\GtH})\) that synchronizes to a vertex in \(\Gc\).
     No path presenting this word can start in \(\Hc\) as no vertex in \(\Gc\) is reachable from any 
@@ -707,13 +712,15 @@ prove some properties of \(\GtH\).
     in \(\GtH\).
     If \(\pi\) is some path in \(\Hc\) presenting \(w\), then it must end at \(I\). By 
     \Cref{nogsync}, \(I\) cannot be a vertex in \(\Gc\), so it must be a vertex in \(\Hc\).
-    Therefore, every path in \(\Hc\) presenting \(w\) ends at \(I\), so \(S(\GtH) \subseteq S(\Hc)\).
+    Therefore, every path in \(\Hc\) presenting \(w\) ends at \(I\), so \(S(\GtH) \subseteq S(\Hc)\)
+    as the above holds for every word \(w\) that is synchronizing for \(\GtH\).
 
     Conversely, suppose \(S(\GtH) \subseteq S(\Hc)\). Let \(u \in \Bc(\shift{\GtH})\).
     By \Cref{extensionthm}, we can extend \(u\) to a word \(uw \in \Bc(\shift{\GtH})\) that 
     synchronizes to some vertex \(I\) in \(\GtH\). Hence, \(uw\) is synchronizing 
     for \(\GtH\), so it is also synchronizing for \(\Hc\). But if \(uw\) is synchronizing for
-    \(\Hc\), then by definition, \(uw \in \Bc(\shift{\Hc})\). Therefore, \(\Bc(\shift{\GtH}) \subseteq \Bc(\shift{\Hc})\),
+    \(\Hc\), then by definition, \(uw \in \Bc(\shift{\Hc})\) and thus \(u \in \Bc(\shift{\Hc})\)
+    (as \(\Bc(\shift{\Hc})\) is factorial). Therefore, \(\Bc(\shift{\GtH}) \subseteq \Bc(\shift{\Hc})\),
     so \(\shift{\GtH} = \shift{\Hc}\).
 \end{proof}
 
@@ -746,14 +753,14 @@ prove some properties of \(\GtH\).
 
 \chapter{Subshift testing}
 
-In the previous section, we posited that if \(\shift{\GtH}\) is irreducible, then \(\shift{\Gc}\) is a subshift of \(\shift{\Hc}\) (\Cref{irrsubshift}),
+In the previous section, we posited that if \(\shift{\GtH}\) is irreducible, then \(\shift{\Gc}\) is a subshift of \(\shift{\Hc}\) (\Cref{irrsubshift}).
 Although this condition is not sufficient for irreducibility (for example, \Cref{010shift}, the presentation of the \(010\)-shift), algorithmically, we will show there is a 
 polynomial-time algorithm for deciding this, which gives a direction in looking for 
 a characterization of irreducibility conditional on this subshift property.
 
 Let \(\Gc\) be a deterministic presentation and \(I\) be a vertex in \(\Gc\). 
 As every edge starting at \(I\) is labeled uniquely, we can see 
-that every path starting at \(I\) is also labeled uniquely. That is, to say, for paths 
+that every path starting at \(I\) is also labeled uniquely. That is to say, for paths 
 \(\pi\) and \(\tau\) both starting at \(I\), if \(\Lc(\pi) = \Lc(\tau)\), then \(\pi = \tau\). We can 
 define a partial \term{transition function} \(\delta_\Gc : \Vc_\Gc \times \Ac_\Gc^* \to \Vc_\Gc\) 
 with \(\delta_\Gc(I, w) \triangleq J\) if there is a path \(\pi\) labeled \(w\) starting 
@@ -762,10 +769,11 @@ then \(\delta_\Gc(I, w)\) is not defined, so in this case, we will say \(\delta_
 where \(0\) is a constant distinct from the vertices of \(\Gc\). Additionally, we 
 will define \(\delta_\Gc(0, w) = 0\). Finally, define 
 the \term{subset transition function} \(\Delta_\Gc : \mathcal{P}(\Vc) \times \Ac_\Gc^* \to \mathcal{P}(\Vc)\)
-with \(\Delta_\Gc(S, w) \triangleq \{ J \in \Vc_\Gc : J \neq 0 \text{ and } \delta_\Gc(I, w) = J \text{ for some } I \in S\}\).
+with \(\Delta_\Gc(S, w) \triangleq \{ J \in \Vc_\Gc : J \neq 0 \text{ and } \delta_\Gc(I, w) = J \text{ for some } I \in S\}\)
+for all subsets \(S\) of vertices of \(\Gc\).
 
 \begin{proposition}\label{deltaprops}
-    Let \(\Gc\) be an essential, deterministic labeled graph, and \(I\) and \(J\) be verticies in \(\Gc\). The following properties of the 
+    Let \(\Gc\) be an essential, deterministic presentation, and \(I\) and \(J\) be vertices in \(\Gc\). The following properties of the 
     transition function are true:
 
     \begin{enumerate}[(i)]
@@ -778,7 +786,7 @@ with \(\Delta_\Gc(S, w) \triangleq \{ J \in \Vc_\Gc : J \neq 0 \text{ and } \del
 
 \begin{proof}
     Note that \(w \in F(I)\) exactly when there is a path labeled \(w\) starting at \(I\), so (i) follows 
-    evidently from the defintion of \(\delta_\Gc\). Similarly, \(w \in \Bc(\shift{\Gc})\) exactly 
+    evidently from the definition of \(\delta_\Gc\). Similarly, \(w \in \Bc(\shift{\Gc})\) exactly 
     when \(w \in F(I)\) for some vertex \(I\) in \(\Gc\), so (ii) follows from the definition of \(\Delta_\Gc\).
 
     For (iii), let \(u, v \in \Ac_\Gc^*\). If \(\delta_\Gc(I, uv) \neq 0\), then there is a unique path \(\pi=e_1 \dots e_n\) 
@@ -814,7 +822,7 @@ with \(\Delta_\Gc(S, w) \triangleq \{ J \in \Vc_\Gc : J \neq 0 \text{ and } \del
 
 From the definition of \(\Gc^0\), we can see that for 
 all vertices \(I\) in \(\Gc\), \(w \in F(I)\) if and only if 
-there is no path labeled \(w\) starting at \(I\) and ending at \(0\).
+there is no path in \(\Gc^0\) labeled \(w\) starting at \(I\) and ending at \(0\).
 
 \begin{definition}
     Let \(\Gc\) and \(\Hc\) be labeled graphs. The \term{label product} of \(\Gc\) and \(\Hc\)
@@ -831,19 +839,19 @@ and ending at \(J_2\)
 if and only if there is a path in \(\Gc*\Hc\) starting at \((I_1, J_1)\) and 
 ending at \((I_2, J_2)\).
 
-With these two graph constructions, we can see that essential graphs \(\Gc\) and 
+With these two graph constructions, we can see that for essential presentations \(\Gc\) and 
 \(\Hc\) and for a vertex 
 \(I\) in \(\Gc\) and a vertex \(J\) in \(\Hc\), checking \(F(I) \subseteq F(J)\)
 reduces to checking the existence of a path in \(\Gc * \Hc^0\) from \((I, J)\) to 
 any vertex in the set \(\{(K, 0) : K \in \Vc_\Gc\}\). With this, we 
 can introduce \Cref{algsubshift}, which given an irreducible deterministic presentation \(\Gc\)
-and an essential deterministic presentation \(\Hc\), test whether \(\Gc\)
+and an essential deterministic presentation \(\Hc\), tests whether \(\Gc\)
 presents a subshift of the shift \(\Hc\) presents. From a high 
 level, the algorithm takes a vertex in \(\Gc\) and a vertex in \(\Hc\) and 
 tries to find a word in the follower set of the vertex in \(\Gc\) but 
 not in the follower set of the vertex in \(\Hc\). If it finds this word, 
 the algorithm transitions the vertex in \(\Gc\) forward using the word and
-transitions a subset of vertices in \(\Hc\) foward using the word. If 
+transitions a subset of vertices in \(\Hc\) forward using the word. If 
 the size subset of vertices from \(\Hc\) ever reaches \(0\), then 
 the algorithm has found a word in \(\Bc(\shift{\Gc})\) not in \(\Bc(\shift{\Hc})\). 
 Otherwise, if it does not find this word, then every word in \(\Bc(\shift{\Gc})\) must be in \(\Bc(\shift{\Hc})\).
@@ -964,8 +972,8 @@ the irreducibility problem, it does shed some light on a general minimization
 procedure. For a \(\GtH\)-like graph, if \Cref{algsubshift} returns 
 false on inputs \(\Gc\) and \(\Hc\), then we actually know the presentation 
 is \term{synchronizing}, meaning that every vertex is synchronizing.
-As such, since \(\GtH\) is follower-separated, then by Corollary 5.4 of
-\cite{jonoska1996sofic}, it is minimal.
+As such, since \(\GtH\) is follower-separated, then by
+\cite[Corollary 5.4]{jonoska1996sofic}, it is minimal.
 
 Looking forwards, determining when \(\shift{\GtH}\) is irreducible when 
 \(\shift{\Gc} \subseteq \shift{\Hc}\) intuitively seems to be linked 
@@ -998,17 +1006,19 @@ present the even shift, as it introduces the word
     \label{notevenshift}
 \end{figure}
 
-The results here are likely to be easily extended to presentations with arbitrarly 
+The results here are likely to be easily extended to presentations with arbitrarily 
 many irreducible components. In fact, \cite{jonoska1996sofic} notes that 
 for any presentation of an irreducible sofic shift, the subgraph 
-induced by the synchronizing vertices presents the whole shift. In 
-fact, this subgraph is irreducible and a sink (in the sense that 
-there is no path starting at a vertex in the sink and ending 
-in any other irreducible component). If given 
+induced by the synchronizing vertices presents the whole shift.
+% In 
+% fact, this subgraph is irreducible and a sink (in the sense that 
+% there is no path starting at a vertex in the sink and ending 
+% in any other irreducible component).
+If given 
 an arbitrary presentation that presents an irreducible shift, then 
 to minimize it, one would need to find a synchronizing word and then 
-identify the irreducible component it syncrhonizes to. Although not 
-explicity discussed here, finding a syncrhonizing word should be doable in 
+identify the irreducible component it synchronizes to. Although not 
+explicitly discussed here, finding a synchronizing word should be doable in 
 polynomial-time with a modification to \cite{eppstein1990reset}'s algorithm for 
 finding a synchronizing word for DFAs.\footnote{
     Synchronizing words for DFAs, also known as reset words, differ slightly  
@@ -1028,9 +1038,9 @@ synchronizing component.
 
 Finally, the hardness of the general problem of minimization seems 
 to have not been investigated. Those familiar with 
-automata theory can see that presentation of sofic shifts 
+automata theory can see that presentations of sofic shifts 
 are closely related to \term{nondeterministic finite automata} (NFA),
-as presentations can be interpreted as NFAs
+as such presentations can be interpreted as NFAs
 by making the set of start states 
 all the vertices of the presentation and 
 every state a final state. If we restrict 
