@@ -44,14 +44,15 @@ G6.add_edge(1, 1, label="1")
 G6.add_edge(1, 2, label="0")
 G6.add_edge(2, 2, label="1")
 
-#
-G7 = nx.MultiDiGraph(G3)
-G7.add_nodes_from([5, 6])
-G7.add_edge(2, 4, label="2")
-G7.add_edge(5, 6, label="0")
-G7.add_edge(6, 6, label="1")
-G7.add_edge(6, 5, label="0")
-G7.add_edge(5, 4, label="2")
+# subshift of even shift
+G7 = nx.MultiDiGraph()
+G7.add_nodes_from([1, 2, 3, 4])
+G7.add_edge(1, 1, label="1")
+G7.add_edge(1, 2, label="0")
+G7.add_edge(2, 3, label="0")
+G7.add_edge(3, 4, label="0")
+G7.add_edge(4, 1, label="0")
+
 
 def test_is_labeled():
     assert not is_labeled(G1)
@@ -92,8 +93,8 @@ def test_transition():
     assert transition(G2, 1, "2") is None
     
 
-def test_minimize():
-    assert is_label_isomorphic(G2, minimize(G3))
+def test_follower_separate():
+    assert is_label_isomorphic(G2, follower_separate(G3))
 
 
 def test_is_follower_separated():
@@ -115,7 +116,6 @@ def test_is_irreducible():
     assert is_irreducible(G5)
 
 
-# def test_presents_irreducible_shift():
-#     assert presents_irreducible_shift(G2)
-#     assert presents_irreducible_shift(G4)
-#     assert not presents_irreducible_shift(G6)
+def test_is_subshift():
+    assert is_subshift(G2, G2)
+    assert is_subshift(G7, G2)

@@ -4,7 +4,12 @@ import random
 from collections import deque
 import heapq 
 from datetime import datetime
-from itertools import product
+from itertools import product, combinations
+
+
+class iset(frozenset):
+    def __repr__(self):
+        return "{" f"{', '.join(repr(i) for i in self)}" "}"
 
 
 def is_labeled(G):
@@ -12,11 +17,18 @@ def is_labeled(G):
     return all(label is not None for _, _, label in G.edges(data="label"))
 
 
+def _outgoing_labels_list(G, I):
+    return [label for (_, _, label) in G.out_edges(I, data="label")]
+
+
+def outgoing_labels(G, I):
+    return iset(_outgoing_labels_list(G, I))
+
+
 def is_deterministic(G):
     """Returns True if G is deterministic """
-    for vertex in G:
-        labels = [label for (_, _, label) in G.out_edges(vertex, data="label")]
-        if len(set(labels)) != len(labels):
+    for I in G:
+        if len(outgoing_labels(G, I)) != len(_outgoing_labels_list(G, I)):
             return False
     return True
 
@@ -35,8 +47,8 @@ def trim(G):
     """Removes stranded vertices from G."""
     G = nx.MultiDiGraph(G)
     G.remove_nodes_from([I for I in G if is_stranded(G, I)])
-    return G
-
+    return G    
+    
 
 def transition(G, I, w):
     """
@@ -51,64 +63,43 @@ def transition(G, I, w):
     if I is None:
         return None
     
-    for c in w:
-        defined = False
-        for (_, J, l) in G.out_edges(I, data="label"):
-            if l == c:
-                I = J
-                defined = True
-                break
-        if not defined:
+    for a in w:
+        d = {b: J for _, J, b in G.out_edges(I, data="label")}
+        if a not in d:
             return None
+        else:
+            I = d[a]
         
     return I
 
 
-def table_generator(l):
-    for i in range(len(l)):
-        for j in range(i+1, len(l)):
-            yield l[i], l[j]
-
-
-def table_ordering(l, x, y):
-    x_idx = l.index(x)
-    y_idx = l.index(y)
-    i, j = sorted([x_idx, y_idx])
-    return l[i], l[j]
-
-
-def minimize(g):
-    g = trim(g)
-    vertex_list = list(g)
-    o = lambda x, y: table_ordering(vertex_list, x, y)
+def make_inequivalence_table(G):
     marked = {}
-    for i, j in table_generator(vertex_list):
-        i_outgoing_labels = set(l for _, _, l in g.out_edges(i, data="label"))
-        j_outgoing_labels = set(l for _, _, l in g.out_edges(j, data="label"))
-        
-        # print(i_outgoing_labels, j_outgoing_labels, i_outgoing_labels==j_outgoing_labels)
-        if i_outgoing_labels != j_outgoing_labels:
-            marked[i, j] = True
-        else:
-            marked[i, j] = False
+    for (I, J) in combinations(G, 2):
+        marked[iset([I, J])] = outgoing_labels(G, I) != outgoing_labels(G, J)
 
-    # print(marked)
     while True:
         new_marks = False
-        
-        for i, j in marked:
-            if not marked[i, j]:        
-                labels = [l for _, _, l in g.out_edges(i, data="label")]
-                # print([o(transition(g, i, l), transition(g, j, l)) for l in labels])
-                if any(marked.get(o(transition(g, i, l), transition(g, j, l)), False) for l in labels):
-                    marked[i, j] = True
-                    new_marks = True               
-        
+        for s in marked:
+            if not marked[s]:
+                I, J = s
+                x = outgoing_labels(G, I)
+                x = (iset([transition(G, I, a), transition(G, J, a)]) for a in x)
+                x = (marked.get(sp, False) for sp in x)
+                if any(x):
+                    marked[s] = True
+                    new_marks = True
+            
         if not new_marks:
             break
+    
+    return marked
+            
+
+def follower_separate(G):
+    marked = make_inequivalence_table(G)
            
-    # print("eq")
-    vertices = set(vertex_list)
+    vertices = set(G)
     eq_classes = []
     eq_map = {}
     while vertices:
@@ -116,35 +107,34 @@ def minimize(g):
         a = next(it)
         eq_class = set([a])
         for b in it:
-            if not marked[o(a, b)]:
+            if not marked[iset([a, b])]:
                 eq_class.add(b)
         vertices -= eq_class  
         eq_class = iset(eq_class) 
         eq_classes.append(eq_class)
         for e in eq_class:
             eq_map[e] = eq_class
-    # print(eq_classes)
-
-    gp = nx.MultiDiGraph()
-    gp.add_nodes_from(eq_classes)
-    for I in gp:
-        for i, j, l in g.out_edges(I, data="label"):
-            if l not in {l for _, _, l in gp.out_edges(I, data="label")}:
-                gp.add_edge(I, eq_map[j], label=l)
             
-    return gp
+    Gp = nx.MultiDiGraph()
+    Gp.add_nodes_from(eq_classes)
+    for I in Gp:
+        for _, J, a in G.out_edges(I, data="label"):
+            if a not in outgoing_labels(Gp, I):
+                Gp.add_edge(I, eq_map[J], label=a)
+            
+    return Gp
 
 
-def is_follower_separated(g):
-    return is_label_isomorphic(g, minimize(g))
+def is_follower_separated(G):
+    return all(make_inequivalence_table(G).values())
 
 
-def is_label_isomorphic(g1, g2):
-    return iso.is_isomorphic(g1, g2, edge_match=iso.categorical_multiedge_match("label", None))
+def is_label_isomorphic(G1, G2):
+    return iso.is_isomorphic(G1, G2, edge_match=iso.categorical_multiedge_match("label", None))
 
 
-def is_isomorphic(g1, g2):
-    return iso.is_isomorphic(g1, g2)
+def is_isomorphic(G1, G2):
+    return iso.is_isomorphic(G1, G2)
 
 
 def is_irreducible(G):
@@ -188,18 +178,16 @@ def random_graph(n, m):
     return graph_from_partial_fns(pfns)
 
 
-class iset(frozenset):
-    def __repr__(self):
-        return "{" f"{', '.join(repr(i) for i in self)}" "}"
-
-
 def transition_subset(G, ss, w):
     ssp = (transition(G, I, w) for I in ss)
     ssp = (I for I in ssp if I is not None)
     return iset(ssp)
 
 
-def subset_construction(G):
+def subset_construction(G, alphabet=None):
+    if alphabet == iset():
+        alphabet = iset(l for _, _, l in G.edges(data="label"))
+
     Gp = nx.MultiDiGraph()
     init = iset(list(G))
     Gp.add_node(init)
@@ -207,71 +195,18 @@ def subset_construction(G):
     q = deque([init])
     while q:
         current = q.popleft()
-        # print(current)
-        outgoing_labels = iset(l for _, _, l in G.out_edges(current, data="label"))
-        # print(outgoing_labels)
-        for l in outgoing_labels:
-            # new = iset(j for _, j, lp, in G.out_edges(current, data="label") if l == lp)
-            # print(l, new)
-            new = transition_subset(G, current, l)
+        it = (outgoing_labels(G, current) if alphabet is None else alphabet)
+        for a in it:
+            new = transition_subset(G, current, a)
             if new not in visited:
                 q.append(new)
                 visited.add(new)
-            Gp.add_edge(current, new, label=l)
+            Gp.add_edge(current, new, label=a)
 
     return Gp
 
 
-def astar(G, source, target_set, h):
-    visited = set([source])
-    q = []
-    heapq.heappush(q, (h(source), source))
-    g = {source: 0}
-    f = {source: h(source)}
-    prev = {}
-    n = 0
-
-    while q:
-        n += 1
-        _, current = heapq.heappop(q)
-        if current in target_set:
-            return prev, current, n
-
-        visited.add(current)
-
-        for _, succ, l in G.out_edges(current, data="label"):
-            g_succ = g[source] + 1
-            if g_succ < g.get(succ, float("inf")):
-                prev[succ] = current
-                g[succ] = g_succ
-                f[succ] = g_succ + h(succ)
-                if succ not in visited:
-                    heapq.heappush(q, (f[succ], succ))
-
-
-def reconstruct_path(prev, target):
-    p = []
-    while target in prev:
-        p.append(target)
-        target = prev[target]
-    
-    p = list(reversed(p))
-    x = (IJ for IJ in zip(p, p[1:]))
-    x = ([l for _, K, l in G_ssc.out_edges(I, data="label") if K == J] for I, J in x)
-    x = (ls[0] for ls in x)
-    return ''.join(x)
-
-
-def find_synchronizing_word(G, init=None):
-    if init is None:
-        init = iset(list(G))
-    G_ssc = subset_construction(G)
-    prev, target, _ = astar(G_ssc, init, {iset([i]) for i in G}, len)
-
-    return reconstruct_path(prev, target)
-
-
-def is_2_simple(G):
+def is_GH(G):
     sccs = list(nx.strongly_connected_components(G))
     if len(sccs) != 2:
         return False
@@ -284,6 +219,19 @@ def is_2_simple(G):
        return True
 
     return False
+
+
+def get_GH(GH):
+    sccs = list(nx.strongly_connected_components(GH))
+    H1, H2 = GH.subgraph(sccs[0]), GH.subgraph(sccs[1])
+    edges_H1_H2 = len([v for u, v in GH.out_edges(H1) if v in H2])
+    edges_H2_H1 = len([v for u, v in GH.out_edges(H2) if v in H1])
+    if (edges_H1_H2 == 1 and edges_H2_H1 == 0):
+        return H1, H2
+    elif (edges_H2_H1 == 1 and edges_H1_H2 == 0):
+        return H2, H1
+    else:
+        return None
 
     
 def write_graph(G):
@@ -324,6 +272,46 @@ def find_shortest_synchronizing_word(G):
     return ws
 
 
+def find_shortest_GH_word(GH):
+    res = get_GH(GH)
+    assert res is not None
+    G, H = res
+    alphabet = iset(l for _, _, l in GH.edges(data="label"))
+    P = label_product(
+        subset_construction(GH),
+        subset_construction(H, alphabet=alphabet)
+    )
+    # print(list(P))
+    source = (iset(GH), iset(H))
+    for u, v in nx.bfs_edges(P, source):
+        P.nodes[v]["pred"] = u
+    
+    ws = {}
+    for s in (s for s in P if s[1] == iset()):
+        c = s
+        path = []
+        no_path = False
+        while c != source:
+            path.append(c)
+            if "pred" not in P.nodes[c]:
+                no_path = True
+                break
+            else:
+                c = P.nodes[c]["pred"]
+
+        if no_path:
+            continue
+
+        path.append(source)
+        path = list(reversed(path))
+        w = []
+        for u, v in zip(path, path[1:]):
+            w.append(first(P[u][v].values())["label"])
+        ws[s] = ''.join(w)
+    
+    return ws
+
+
 def make_scc_dag(G):
     Gp = nx.DiGraph()
     sccs = [iset(c) for c in nx.strongly_connected_components(G)]
@@ -331,15 +319,16 @@ def make_scc_dag(G):
     for ci in sccs:
         for cj in sccs:
             if ci != cj:
-                edges_between_ci_cj = [(u, v) for u, v in G.out_edges(ci) if v in cj]
+                edges_between_ci_cj = any(True for u, v in G.out_edges(ci) if v in cj)
                 if edges_between_ci_cj:
                     Gp.add_edge(ci, cj, edges_between=edges_between_ci_cj)
 
-                edges_between_cj_ci = [(u, v) for u, v in G.out_edges(cj) if v in ci]
+                edges_between_cj_ci = any(True for u, v in G.out_edges(cj) if v in ci)
                 if edges_between_cj_ci:
                     Gp.add_edge(cj, ci, edges_between=edges_between_cj_ci)
 
     return Gp
+
 
 def add_kill_state(G, alphabet=None):
     Gp = nx.MultiDiGraph(G)
@@ -349,7 +338,7 @@ def add_kill_state(G, alphabet=None):
         alphabet = {l for _, _, l in G.edges(data="label")}
 
     for I in Gp:
-        out_labels = {l for _, _, l in G.edges(I, data="label")}
+        out_labels = outgoing_labels(G, I)
         for a in (alphabet - out_labels):
             Gp.add_edge(I, "K", label=a)
         
@@ -357,19 +346,16 @@ def add_kill_state(G, alphabet=None):
 
 
 def label_product(G, H):
-
     GH = nx.MultiDiGraph()
     GH.add_nodes_from(product(G, H))
 
     for (I, J) in GH:
-        I_labels = {l for _, _, l in G.out_edges(I, data="label")}
-        J_labels = {l for _, _, l in H.out_edges(J, data="label")}
-        for l in (I_labels & J_labels):
-            Ip = transition(G, I, l)
-            Jp = transition(H, J, l)
+        for a in (outgoing_labels(G, I) & outgoing_labels(H, J)):
+            Ip = transition(G, I, a)
+            Jp = transition(H, J, a)
             assert Ip is not None
             assert Jp is not None
-            GH.add_edge((I, J), (Ip, Jp), label=l)
+            GH.add_edge((I, J), (Ip, Jp), label=a)
 
     return GH  
 
@@ -383,55 +369,68 @@ def is_subshift(G, H):
     Hk = add_kill_state(H, alphabet=alphabet)
     GH = label_product(G, Hk)
     paths = nx.shortest_path(GH)
-
-    for I0 in G:
-        X = list(H)
-        w = ""
-        I = I0
-        while True:
-            J = first(X)
-            path_exists = False
-            for A in G:
-                if (A, "K") in paths[I, J]:
-                    # there is a path starting at I labeled wp that 
-                    # takes J to the kill state 
-                    path_exists = True
-                    path = paths[I, J][A, "K"]
-                    wp = "".join([first(GH[a][b].values())["label"] for a, b in zip(path, path[1:])])
-                    I = transition(G, I, wp)
-                    X = transition_subset(H, X, wp)
-                    w += wp
-                    if len(X) == 0:
-                        # w in language of G but not in language of H
-                        print(I)
-                        return w  
-                    break
-
-            if not path_exists:
+    I = first(G)
+    X = list(H)
+    w = "" 
+    while True:
+        J = first(X)
+        path_exists = False
+        for A in G:
+            if (A, "K") in paths[I, J]:
+                # there is a path starting at I labeled wp that 
+                # takes J to the kill state 
+                path_exists = True
+                path = paths[I, J][A, "K"]
+                wp = "".join([first(GH[a][b].values())["label"] for a, b in zip(path, path[1:])])
+                I = transition(G, I, wp)
+                X = transition_subset(H, X, wp)
+                w += wp
+                if len(X) == 0:
+                    # w in language of G but not in language of H
+                    return False  
                 break
+
+        if not path_exists:
+            break
 
     return True
 
-def sigma_star(sigma=["0", "1"]):
-    c = 1
-    while True:
-        for s in product(sigma, repeat=c):
-            yield "".join(s)
-        c += 1
 
-def enumerate_language(G):
-    for w in sigma_star():
-        if transition_subset(G, G, w):
-            yield w
+def find_shortest_separating_word(G, I, J):
+    P = label_product(G, add_kill_state(G))
+    paths = nx.shortest_path(P)
+    paths = [paths[I, J][A, "K"] for A in G if (A, "K") in paths[I, J]]
+    if paths:
+        path = min(paths, key=len)
+        # print(path)
+        return "".join(
+            first(P[a][b].values())["label"] for a, b in zip(path, path[1:])
+        )
 
-def enumerate_complement(G):
-    for w in sigma_star():
-        if not transition_subset(G, G, w):
-            yield w
+def choice_graph(GH):
+    res = get_GH(GH)
+    assert res is not None
+    G, H = res
 
-def take(x, n):
-    return [i for i, _ in zip(x, range(n))]
+    K = nx.MultiDiGraph()
 
-# def minimize_automata(G, q0, F):  
-def test():
-    print("hi")
+    init = [(I, iset(H)) for I in G]
+    K.add_nodes_from(init)
+    q = deque(init)
+    visited = set(init)
+
+    while q:
+        current = q.popleft()
+        I, X = current
+        it = (find_shortest_separating_word(GH, I, J) for J in X)
+        it = (w for w in it if w is not None)
+        for w in it:
+            Ip = transition(GH, I, w)
+            Xp = transition_subset(GH, X, w)
+            new = (Ip, Xp)
+            if new not in visited:
+                q.append(new)
+                visited.add(new)
+            K.add_edge(current, new, label=w)
+
+    return K
