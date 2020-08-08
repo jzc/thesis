@@ -396,16 +396,23 @@ def is_subshift(G, H):
     return True
 
 
-def find_shortest_separating_word(G, I, J):
+def find_shortest_separating_words(G, I, J):
     P = label_product(G, add_kill_state(G))
     paths = nx.shortest_path(P)
     paths = [paths[I, J][A, "K"] for A in G if (A, "K") in paths[I, J]]
     if paths:
-        path = min(paths, key=len)
-        # print(path)
-        return "".join(
-            first(P[a][b].values())["label"] for a, b in zip(path, path[1:])
-        )
+        min_len = min([len(p) for p in paths])
+        paths = [p for p in paths if len(p) == min_len]
+        all_words = []
+        for path in paths:
+            words = [edge["label"] for edge in P[path[0]][path[1]].values()]
+            for i in range(1, len(path)-1):
+                labels = [edge["label"] for edge in P[path[i]][path[i+1]].values()]
+                words = [word+label for word in words for label in labels]
+            all_words.extend(words)        
+
+        return all_words
+
 
 def choice_graph(GH):
     res = get_GH(GH)
@@ -422,8 +429,9 @@ def choice_graph(GH):
     while q:
         current = q.popleft()
         I, X = current
-        it = (find_shortest_separating_word(GH, I, J) for J in X)
-        it = (w for w in it if w is not None)
+        it = (find_shortest_separating_words(GH, I, J) for J in X)
+        it = (ws for ws in it if ws is not None)
+        it = (w for ws in it for w in ws)
         for w in it:
             Ip = transition(GH, I, w)
             Xp = transition_subset(GH, X, w)

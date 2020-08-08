@@ -119,3 +119,19 @@ def test_is_irreducible():
 def test_is_subshift():
     assert is_subshift(G2, G2)
     assert is_subshift(G7, G2)
+
+
+def test_find_shortest_separating_words():
+    G = nx.MultiDiGraph()
+    G.add_nodes_from([1, 2, 3, 4, 5, 6, 7])
+    G.add_edge(1, 2, label="a")
+    G.add_edge(1, 2, label="b")
+    G.add_edge(2, 3, label="a")
+    G.add_edge(2, 3, label="b")
+    G.add_edge(3, 4, label="c")
+    G.add_edge(5, 6, label="a")
+    G.add_edge(5, 6, label="b")
+    G.add_edge(6, 7, label="a")
+    G.add_edge(6, 7, label="b")
+    assert (iset(find_shortest_separating_words(G, 1, 5)) == 
+            iset(["aac", "abc", "bac", "bbc"]))
